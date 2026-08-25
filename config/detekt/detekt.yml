@@ -1,0 +1,125 @@
+config:
+  validation: false
+  warningsAsErrors: true
+  checkExhaustiveness: true
+
+console-reports:
+  active: true
+  exclude: []
+
+style:
+  active: true
+  BracesOnWhenStatements:
+    active: true
+  UtilityClassWithPublicConstructor:
+    ignoreAnnotated:
+      - 'Testcontainers'
+  NamedArguments:
+    active: true
+    allowedArguments: 2
+  ClassOrdering:
+    active: true
+  CollapsibleIfStatements:
+    active: true
+  DataClassContainsFunctions:
+    active: false
+  DataClassShouldBeImmutable:
+    active: true
+  DoubleNegativeExpression:
+    active: true
+  EqualsOnSignatureLine:
+    active: true
+  ExplicitCollectionElementAccessMethod:
+    active: true
+  ExpressionBodySyntax:
+    active: true
+
+comments:
+  DeprecatedBlockTag:
+    active: true
+  EndOfSentenceFormat:
+    active: true
+  KDocReferencesNonPublicProperty:
+    active: true
+  OutdatedDocumentation:
+    active: false
+  UndocumentedPublicFunction:
+    active: false
+
+complexity:
+  CognitiveComplexMethod:
+    active: true
+  ComplexInterface:
+    active: true
+  CyclomaticComplexMethod:
+    active: true
+  LabeledExpression:
+    active: true
+  LargeClass:
+    active: true
+  LongMethod:
+    active: true
+  LongParameterList:
+    active: true
+  NestedScopeFunctions:
+    active: true
+  StringLiteralDuplication:
+    active: true
+  TooManyFunctions:
+    active: true
+
+exceptions:
+  NotImplementedDeclaration:
+    active: true
+  ObjectExtendsThrowable:
+    active: true
+  ThrowingExceptionInMain:
+    active: true
+
+naming:
+  BooleanPropertyNaming:
+    active: true
+  FunctionNameMaxLength:
+    active: true
+    maximumFunctionNameLength: 50
+    ignoreAnnotated:
+      - Test
+  FunctionNameMinLength:
+    active: true
+    minimumFunctionNameLength: 2
+  NonBooleanPropertyPrefixedWithIs:
+    active: true
+  VariableMaxLength:
+    active: true
+  FunctionNaming:
+    active: true
+    ignoreAnnotated:
+      - Composable
+
+performance:
+  CouldBeSequence:
+    active: true
+  UnnecessaryInitOnArray:
+    active: true
+  UnnecessaryPartOfBinaryExpression:
+    active: true
+
+potential-bugs:
+  Deprecation:
+    active: true
+  ElseCaseInsteadOfExhaustiveWhen:
+    active: true
+  ExitOutsideMain:
+    active: true
+  ImplicitUnitReturnType:
+    active: true
+  MissingUseCall:
+    active: true
+  NullCheckOnMutableProperty:
+    active: true
+  NullableToStringCall:
+    active: true
+  UnnamedParameterUse:
+    active: true
+  UnnecessaryNotNullCheck:
+    active: true

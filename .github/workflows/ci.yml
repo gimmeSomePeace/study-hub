@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  pull_request:
+#  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Клонирование репозитория
+        uses: actions/checkout@v7
+
+      - name: Настройка JVM
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Настройка Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Сборка
+        run: ./gradlew build --console=plain --info --stacktrace

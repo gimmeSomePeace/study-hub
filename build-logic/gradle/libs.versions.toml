@@ -1,0 +1,11 @@
+[versions]
+kotlin = "2.3.20"
+detekt = "2.0.0-alpha.3"
+
+[libraries]
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+detekt-gradle-plugin = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
+
+[plugins]
+detekt = { id = "dev.detekt", version.ref = "detekt" }
+convention-detekt = { id = "buywise.detekt" }
