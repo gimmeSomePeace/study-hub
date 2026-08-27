@@ -1,9 +1,38 @@
 [versions]
 kotlin = "2.3.20"
+junit = "5.13.4"
+mockk = "1.14.5"
 spotless = "8.6.0"
+spring-boot = "4.1.0"
+spring-mockk = "5.0.1"
 
 [libraries]
+# version management
+spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
+
+# starters
+spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
+# test starters
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+spring-boot-starter-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
+
+spring-web = { module = "org.springframework:spring-web" }
+spring-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+spring-mockk = { module = "com.ninja-squad:springmockk", version.ref = "spring-mockk" }
+
+jakarta-persistence-api = { module = "jakarta.persistence:jakarta.persistence-api" }
+jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin" }
+
+# JUnit
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit"}
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+kotlin-jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
+
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

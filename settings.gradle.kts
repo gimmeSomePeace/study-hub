@@ -21,3 +21,7 @@ plugins {
 }
 
 include(":app")
+
+include("features")
+include("features:semester")
+include("features:common")
