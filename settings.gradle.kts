@@ -20,8 +20,8 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-include(":app")
-
+include("app")
 include("features")
 include("features:semester")
 include("features:common")
+include("features:subject")

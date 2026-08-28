@@ -25,6 +25,7 @@
             <option value="$PROJECT_DIR$/features" />
             <option value="$PROJECT_DIR$/features/common" />
             <option value="$PROJECT_DIR$/features/semester" />
+            <option value="$PROJECT_DIR$/features/subject" />
           </set>
         </option>
       </GradleProjectSettings>
