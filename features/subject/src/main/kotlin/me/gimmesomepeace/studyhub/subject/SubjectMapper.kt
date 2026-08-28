@@ -21,4 +21,5 @@ fun SubjectEntity.toListItem() = SubjectListItem(
     name = name,
     code = code,
     teacher = teacher,
+    color = color,
 )

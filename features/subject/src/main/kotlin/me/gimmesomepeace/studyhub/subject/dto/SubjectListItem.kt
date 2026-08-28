@@ -8,4 +8,5 @@ data class SubjectListItem(
     val name: String,
     val code: String?,
     val teacher: String?,
+    val color: String?,
 )
