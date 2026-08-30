@@ -1,4 +1,5 @@
 val detektPluginId = "conventional.detekt"
+val jacocoPluginId = "conventional.jacoco"
 
 plugins {
     `kotlin-dsl`
@@ -14,6 +15,10 @@ gradlePlugin {
         register("DetektConventionPlugin") {
             id = detektPluginId
             implementationClass = "me.gimmesomepeace.buildlogic.DetektConventionPlugin"
+        }
+        register("JacocoReportPlugin") {
+            id = jacocoPluginId
+            implementationClass = "me.gimmesomepeace.buildlogic.JacocoConventionPlugin"
         }
     }
 }

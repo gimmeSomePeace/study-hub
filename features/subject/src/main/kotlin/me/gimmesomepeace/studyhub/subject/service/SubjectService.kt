@@ -6,8 +6,8 @@ import me.gimmesomepeace.studyhub.subject.api.update.SubjectUpdateRequest
 import me.gimmesomepeace.studyhub.subject.dto.SubjectDetails
 import me.gimmesomepeace.studyhub.subject.dto.SubjectListItem
 import me.gimmesomepeace.studyhub.subject.entity.SubjectEntity
-import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
 import me.gimmesomepeace.studyhub.subject.exception.SemesterNotFoundException
+import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
 import me.gimmesomepeace.studyhub.subject.repository.SubjectRepository
 import me.gimmesomepeace.studyhub.subject.toDetails
 import me.gimmesomepeace.studyhub.subject.toListItem

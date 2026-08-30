@@ -10,8 +10,8 @@ import me.gimmesomepeace.studyhub.subject.component.exception.ComponentNotFoundE
 import me.gimmesomepeace.studyhub.subject.component.repository.ComponentRepository
 import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
 import me.gimmesomepeace.studyhub.subject.repository.SubjectRepository
-import me.gimmesomepeace.studyhub.subject.toDetails
-import me.gimmesomepeace.studyhub.subject.toListItem
+import me.gimmesomepeace.studyhub.subject.component.toDetails
+import me.gimmesomepeace.studyhub.subject.component.toListItem
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service

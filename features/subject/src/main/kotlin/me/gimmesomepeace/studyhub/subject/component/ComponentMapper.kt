@@ -1,4 +1,4 @@
-package me.gimmesomepeace.studyhub.subject
+package me.gimmesomepeace.studyhub.subject.component
 
 import me.gimmesomepeace.studyhub.subject.component.dto.ComponentDetails
 import me.gimmesomepeace.studyhub.subject.component.dto.ComponentListItem
