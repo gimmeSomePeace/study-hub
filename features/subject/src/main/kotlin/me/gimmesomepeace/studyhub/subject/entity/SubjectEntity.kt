@@ -4,7 +4,7 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import me.gimmesomepeace.studyhub.subject.SubjectConstraints
+import me.gimmesomepeace.studyhub.subject.constraint.SubjectConstraints
 import java.time.Instant
 import java.util.UUID
 

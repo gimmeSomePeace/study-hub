@@ -8,7 +8,7 @@ import io.mockk.just
 import io.mockk.verify
 import me.gimmesomepeace.studyhub.common.IdGenerator
 import me.gimmesomepeace.studyhub.subject.entity.SubjectEntity
-import me.gimmesomepeace.studyhub.subject.exception.NotFoundException
+import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
 import me.gimmesomepeace.studyhub.subject.exception.SemesterNotFoundException
 import me.gimmesomepeace.studyhub.subject.fixtures.pageable
 import me.gimmesomepeace.studyhub.subject.fixtures.semesterId
@@ -71,7 +71,7 @@ class SubjectServiceTest {
             every { subjectRepository.findById(subjectId) } returns Optional.empty()
 
             assertThatThrownBy { service.getById(subjectId) }
-                .isInstanceOf(NotFoundException::class.java)
+                .isInstanceOf(SubjectNotFoundException::class.java)
                 .hasMessageContaining(subjectId.toString())
         }
     }
@@ -184,7 +184,7 @@ class SubjectServiceTest {
             every { subjectRepository.findById(subjectId) } returns Optional.empty()
 
             assertThatThrownBy { service.update(subjectId, request) }
-                .isInstanceOf(NotFoundException::class.java)
+                .isInstanceOf(SubjectNotFoundException::class.java)
                 .hasMessageContaining(subjectId.toString())
         }
 

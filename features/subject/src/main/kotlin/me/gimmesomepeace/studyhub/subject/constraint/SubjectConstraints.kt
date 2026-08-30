@@ -1,4 +1,4 @@
-package me.gimmesomepeace.studyhub.subject
+package me.gimmesomepeace.studyhub.subject.constraint
 
 object SubjectConstraints {
     const val NAME_MIN_LENGTH = 1

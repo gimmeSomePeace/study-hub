@@ -6,7 +6,7 @@ import me.gimmesomepeace.studyhub.subject.api.update.SubjectUpdateRequest
 import me.gimmesomepeace.studyhub.subject.dto.SubjectDetails
 import me.gimmesomepeace.studyhub.subject.dto.SubjectListItem
 import me.gimmesomepeace.studyhub.subject.entity.SubjectEntity
-import me.gimmesomepeace.studyhub.subject.exception.NotFoundException
+import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
 import me.gimmesomepeace.studyhub.subject.exception.SemesterNotFoundException
 import me.gimmesomepeace.studyhub.subject.repository.SubjectRepository
 import me.gimmesomepeace.studyhub.subject.toDetails
@@ -28,7 +28,7 @@ class SubjectService(
     @Transactional(readOnly = true)
     fun getById(id: UUID): SubjectDetails = subjectRepository
         .findById(id)
-        .orElseThrow { NotFoundException(id) }
+        .orElseThrow { SubjectNotFoundException(id) }
         .toDetails()
 
     @Transactional(readOnly = true)
@@ -62,7 +62,7 @@ class SubjectService(
     ): SubjectDetails {
         val subject = subjectRepository
             .findById(id)
-            .orElseThrow { NotFoundException(id) }
+            .orElseThrow { SubjectNotFoundException(id) }
 
         if (request.semesterId != null) subject.semesterId = request.semesterId
         if (request.name != null) subject.name = request.name

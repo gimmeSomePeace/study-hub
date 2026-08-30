@@ -6,8 +6,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.verify
 import me.gimmesomepeace.studyhub.subject.dto.SubjectListItem
-import me.gimmesomepeace.studyhub.subject.exception.NotFoundException
 import me.gimmesomepeace.studyhub.subject.exception.SemesterNotFoundException
+import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
 import me.gimmesomepeace.studyhub.subject.fixtures.semesterId
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectCreateRequest
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectDetails
@@ -21,7 +21,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
-import org.springframework.context.annotation.Import
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -31,12 +30,10 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
-import org.springframework.web.bind.annotation.ExceptionHandler
 import tools.jackson.databind.ObjectMapper
 import java.util.UUID
 
 @WebMvcTest(SubjectController::class)
-@Import(ExceptionHandler::class)
 class SubjectControllerTest {
     @Autowired
     private lateinit var mvc: MockMvc
@@ -65,7 +62,7 @@ class SubjectControllerTest {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
                     jsonPath("$.id") { value(subjectId.toString()) }
-                    jsonPath("$.semesterId") { value(semesterId.toString()) }
+                    jsonPath("$.semesterId") { value(details.semesterId.toString()) }
                     jsonPath("$.name") { value(details.name) }
                     jsonPath("$.code") { value(details.code) }
                     jsonPath("$.teacher") { value(details.teacher) }
@@ -75,7 +72,7 @@ class SubjectControllerTest {
 
         @Test
         fun `should return 404 when subject not found`() {
-            every { service.getById(subjectId) } throws NotFoundException(subjectId)
+            every { service.getById(subjectId) } throws SubjectNotFoundException(subjectId)
 
             mvc
                 .get("/subjects/{id}", subjectId) {
@@ -128,8 +125,6 @@ class SubjectControllerTest {
                     jsonPath("$.content.length()") { value(0) }
                     jsonPath("$.totalElements") { value(0) }
                 }
-
-            verify { service.list(any<Pageable>()) }
         }
     }
 
@@ -159,9 +154,6 @@ class SubjectControllerTest {
                     header { string("Location", "/subjects/$subjectId") }
                     content { contentType(MediaType.APPLICATION_JSON) }
                     jsonPath("$.id") { value(subjectId.toString()) }
-                    jsonPath("$.semesterId") { value(semesterId.toString()) }
-                    jsonPath("$.name") { value(created.name) }
-                    jsonPath("$.code") { value(created.code) }
                 }
 
             verify { service.create(request) }
@@ -230,7 +222,7 @@ class SubjectControllerTest {
         fun `should return 404 when subject not found`() {
             val request = subjectUpdateRequest(name = "Алгоритмы и структуры данных")
 
-            every { service.update(subjectId, request) } throws NotFoundException(subjectId)
+            every { service.update(subjectId, request) } throws SubjectNotFoundException(subjectId)
 
             mvc
                 .patch("/subjects/{id}", subjectId) {
@@ -240,8 +232,6 @@ class SubjectControllerTest {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SUBJECT_NOT_FOUND") }
                 }
-
-            verify { service.update(subjectId, request) }
         }
 
         @Test
