@@ -25,3 +25,5 @@ include("features")
 include("features:semester")
 include("features:common")
 include("features:subject")
+
+include("features:deadline")
