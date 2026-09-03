@@ -27,7 +27,7 @@ import java.net.URI
 import java.util.UUID
 
 @RestController
-@RequestMapping("/subjects/{subjectId}/components")
+@RequestMapping("/api/v1/subjects/{subjectId}/components")
 class ComponentController(
     private val service: ComponentService,
 ) {

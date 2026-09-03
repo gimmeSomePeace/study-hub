@@ -59,7 +59,7 @@ class SemesterControllerTest {
             every { service.getById(semesterId, userId) } returns details
 
             mvc
-                .get("/semesters/{id}", semesterId) {
+                .get("/api/v1/semesters/{id}", semesterId) {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -79,7 +79,7 @@ class SemesterControllerTest {
             every { service.getById(semesterId, userId) } throws SemesterNotFoundException(semesterId)
 
             mvc
-                .get("/semesters/{id}", semesterId) {
+                .get("/api/v1/semesters/{id}", semesterId) {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -102,7 +102,7 @@ class SemesterControllerTest {
             every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
-                .get("/semesters") {
+                .get("/api/v1/semesters") {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -123,7 +123,7 @@ class SemesterControllerTest {
             every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
-                .get("/semesters") {
+                .get("/api/v1/semesters") {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -155,7 +155,7 @@ class SemesterControllerTest {
             every { service.create(request, userId) } returns created
 
             mvc
-                .post("/semesters") {
+                .post("/api/v1/semesters") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -176,7 +176,7 @@ class SemesterControllerTest {
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
-                .post("/semesters") {
+                .post("/api/v1/semesters") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(requestBody)
                 }.andExpect {
@@ -199,7 +199,7 @@ class SemesterControllerTest {
             every { service.update(semesterId, request, userId) } returns updated
 
             mvc
-                .patch("/semesters/{id}", semesterId) {
+                .patch("/api/v1/semesters/{id}", semesterId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -218,7 +218,7 @@ class SemesterControllerTest {
             every { service.update(semesterId, request, userId) } throws SemesterNotFoundException(semesterId)
 
             mvc
-                .patch("/semesters/{id}", semesterId) {
+                .patch("/api/v1/semesters/{id}", semesterId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -234,7 +234,7 @@ class SemesterControllerTest {
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
-                .patch("/semesters/{id}", semesterId) {
+                .patch("/api/v1/semesters/{id}", semesterId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(requestBody)
                 }.andExpect {
@@ -250,7 +250,7 @@ class SemesterControllerTest {
             every { service.delete(semesterId, userId) } just Runs
 
             mvc
-                .delete("/semesters/{id}", semesterId) {
+                .delete("/api/v1/semesters/{id}", semesterId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isNoContent() }

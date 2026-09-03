@@ -27,7 +27,7 @@ import java.net.URI
 import java.util.UUID
 
 @RestController
-@RequestMapping("/subjects")
+@RequestMapping("/api/v1/subjects")
 class SubjectController(
     private val service: SubjectService,
 ) {
@@ -54,7 +54,7 @@ class SubjectController(
     ): ResponseEntity<SubjectDetails> {
         val createdSubject = service.create(request, userPrincipal.userId)
         return ResponseEntity
-            .created(URI("/subjects/${createdSubject.id}"))
+            .created(URI("/api/v1/subjects/${createdSubject.id}"))
             .body(createdSubject)
     }
 

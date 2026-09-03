@@ -27,7 +27,7 @@ import java.net.URI
 import java.util.UUID
 
 @RestController
-@RequestMapping("/semesters")
+@RequestMapping("/api/v1/semesters")
 class SemesterController(
     private val service: SemesterService,
 ) {

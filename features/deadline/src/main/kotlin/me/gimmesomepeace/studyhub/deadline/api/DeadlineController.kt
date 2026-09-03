@@ -27,7 +27,7 @@ import java.net.URI
 import java.util.UUID
 
 @RestController
-@RequestMapping("/deadlines")
+@RequestMapping("/api/v1/deadlines")
 class DeadlineController(
     private val service: DeadlineService,
 ) {
@@ -54,7 +54,7 @@ class DeadlineController(
     ): ResponseEntity<DeadlineDetails> {
         val createdDeadline = service.create(request, userPrincipal.userId)
         return ResponseEntity
-            .created(URI("/deadlines/${createdDeadline.id}"))
+            .created(URI("/api/v1/deadlines/${createdDeadline.id}"))
             .body(createdDeadline)
     }
 

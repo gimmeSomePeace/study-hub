@@ -19,6 +19,8 @@ dependencies {
     implementation(libs.spring.boot.starter.webmvc)
     implementation(libs.spring.boot.starter.security)
 
+    implementation(libs.springdoc.openapi.starter.webmvc)
+
     implementation(libs.jjwt.api)
 
     testImplementation(libs.spring.boot.starter.test)

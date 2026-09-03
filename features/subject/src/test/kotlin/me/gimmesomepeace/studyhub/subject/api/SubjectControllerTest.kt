@@ -62,7 +62,7 @@ class SubjectControllerTest {
             every { service.getById(subjectId, userId) } returns details
 
             mvc
-                .get("/subjects/$subjectId") {
+                .get("/api/v1/subjects/$subjectId") {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -82,7 +82,7 @@ class SubjectControllerTest {
             every { service.getById(subjectId, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
-                .get("/subjects/{id}", subjectId) {
+                .get("/api/v1/subjects/{id}", subjectId) {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -105,7 +105,7 @@ class SubjectControllerTest {
             every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
-                .get("/subjects") {
+                .get("/api/v1/subjects") {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -126,7 +126,7 @@ class SubjectControllerTest {
             every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
-                .get("/subjects") {
+                .get("/api/v1/subjects") {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -156,13 +156,13 @@ class SubjectControllerTest {
             every { service.create(request, userId) } returns created
 
             mvc
-                .post("/subjects") {
+                .post("/api/v1/subjects") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isCreated() }
-                    header { string("Location", "/subjects/$subjectId") }
+                    header { string("Location", "/api/v1/subjects/$subjectId") }
                     content { contentType(MediaType.APPLICATION_JSON) }
                     jsonPath("$.id") { value(subjectId.toString()) }
                 }
@@ -177,7 +177,7 @@ class SubjectControllerTest {
             every { service.create(request, userId) } throws SemesterNotFoundException(semesterId)
 
             mvc
-                .post("/subjects") {
+                .post("/api/v1/subjects") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -193,7 +193,7 @@ class SubjectControllerTest {
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
-                .post("/subjects") {
+                .post("/api/v1/subjects") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(requestBody)
                 }.andExpect {
@@ -217,7 +217,7 @@ class SubjectControllerTest {
             every { service.update(subjectId, request, userId) } returns updated
 
             mvc
-                .patch("/subjects/{id}", subjectId) {
+                .patch("/api/v1/subjects/{id}", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -238,7 +238,7 @@ class SubjectControllerTest {
             every { service.update(subjectId, request, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
-                .patch("/subjects/{id}", subjectId) {
+                .patch("/api/v1/subjects/{id}", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -256,7 +256,7 @@ class SubjectControllerTest {
             every { service.update(subjectId, request, userId) } throws SemesterNotFoundException(newSemesterId)
 
             mvc
-                .patch("/subjects/{id}", subjectId) {
+                .patch("/api/v1/subjects/{id}", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -272,7 +272,7 @@ class SubjectControllerTest {
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
-                .patch("/subjects/{id}", subjectId) {
+                .patch("/api/v1/subjects/{id}", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(requestBody)
                 }.andExpect {
@@ -288,7 +288,7 @@ class SubjectControllerTest {
             every { service.delete(subjectId, userId) } just Runs
 
             mvc
-                .delete("/subjects/{id}", subjectId) {
+                .delete("/api/v1/subjects/{id}", subjectId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isNoContent() }

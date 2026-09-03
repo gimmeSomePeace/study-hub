@@ -70,7 +70,7 @@ class ComponentControllerTest {
             every { service.getById(subjectId, componentId, userId) } returns details
 
             mvc
-                .get("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
+                .get("/api/v1/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -92,7 +92,7 @@ class ComponentControllerTest {
             every { service.getById(subjectId, componentId, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
-                .get("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
+                .get("/api/v1/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -106,7 +106,7 @@ class ComponentControllerTest {
             every { service.getById(subjectId, componentId, userId) } throws ComponentNotFoundException(componentId)
 
             mvc
-                .get("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
+                .get("/api/v1/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -129,7 +129,7 @@ class ComponentControllerTest {
             every { service.list(subjectId, any<Pageable>(), userId) } returns page
 
             mvc
-                .get("/subjects/{subjectId}/components", subjectId) {
+                .get("/api/v1/subjects/{subjectId}/components", subjectId) {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -150,7 +150,7 @@ class ComponentControllerTest {
             every { service.list(subjectId, any<Pageable>(), userId) } returns page
 
             mvc
-                .get("/subjects/{subjectId}/components", subjectId) {
+                .get("/api/v1/subjects/{subjectId}/components", subjectId) {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -165,7 +165,7 @@ class ComponentControllerTest {
             every { service.list(subjectId, any<Pageable>(), userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
-                .get("/subjects/{subjectId}/components", subjectId) {
+                .get("/api/v1/subjects/{subjectId}/components", subjectId) {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -198,7 +198,7 @@ class ComponentControllerTest {
             every { service.create(subjectId, request, userId) } returns created
 
             mvc
-                .post("/subjects/{subjectId}/components", subjectId) {
+                .post("/api/v1/subjects/{subjectId}/components", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -220,7 +220,7 @@ class ComponentControllerTest {
             every { service.create(subjectId, request, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
-                .post("/subjects/{subjectId}/components", subjectId) {
+                .post("/api/v1/subjects/{subjectId}/components", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -236,7 +236,7 @@ class ComponentControllerTest {
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
-                .post("/subjects/{subjectId}/components", subjectId) {
+                .post("/api/v1/subjects/{subjectId}/components", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(requestBody)
                 }.andExpect {
@@ -260,7 +260,7 @@ class ComponentControllerTest {
             every { service.update(subjectId, componentId, request, userId) } returns updated
 
             mvc
-                .patch("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
+                .patch("/api/v1/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -281,7 +281,7 @@ class ComponentControllerTest {
             every { service.update(subjectId, componentId, request, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
-                .patch("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
+                .patch("/api/v1/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -300,7 +300,7 @@ class ComponentControllerTest {
             )
 
             mvc
-                .patch("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
+                .patch("/api/v1/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -316,7 +316,7 @@ class ComponentControllerTest {
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
-                .patch("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
+                .patch("/api/v1/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(requestBody)
                 }.andExpect {
@@ -332,7 +332,7 @@ class ComponentControllerTest {
             every { service.delete(subjectId, componentId, userId) } just Runs
 
             mvc
-                .delete("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
+                .delete("/api/v1/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isNoContent() }
@@ -346,7 +346,7 @@ class ComponentControllerTest {
             every { service.delete(subjectId, componentId, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
-                .delete("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
+                .delete("/api/v1/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }

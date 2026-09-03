@@ -73,7 +73,7 @@ class DeadlineControllerTest {
             every { service.getById(deadlineId, userId) } returns details
 
             mvc
-                .get("/deadlines/{id}", deadlineId) {
+                .get("/api/v1/deadlines/{id}", deadlineId) {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -96,7 +96,7 @@ class DeadlineControllerTest {
             every { service.getById(deadlineId, userId) } throws DeadlineNotFoundException(deadlineId)
 
             mvc
-                .get("/deadlines/{id}", deadlineId) {
+                .get("/api/v1/deadlines/{id}", deadlineId) {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -119,7 +119,7 @@ class DeadlineControllerTest {
             every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
-                .get("/deadlines") {
+                .get("/api/v1/deadlines") {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -140,7 +140,7 @@ class DeadlineControllerTest {
             every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
-                .get("/deadlines") {
+                .get("/api/v1/deadlines") {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {
@@ -172,13 +172,13 @@ class DeadlineControllerTest {
             every { service.create(request, userId) } returns created
 
             mvc
-                .post("/deadlines") {
+                .post("/api/v1/deadlines") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isCreated() }
-                    header { string("Location", "/deadlines/$deadlineId") }
+                    header { string("Location", "/api/v1/deadlines/$deadlineId") }
                     content { contentType(MediaType.APPLICATION_JSON) }
                     jsonPath("$.id") { value(deadlineId.toString()) }
                     jsonPath("$.subjectId") { value(subjectId.toString()) }
@@ -197,7 +197,7 @@ class DeadlineControllerTest {
             every { service.create(request, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
-                .post("/deadlines") {
+                .post("/api/v1/deadlines") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -215,7 +215,7 @@ class DeadlineControllerTest {
             every { service.create(request, userId) } throws ComponentNotFoundException(componentId)
 
             mvc
-                .post("/deadlines") {
+                .post("/api/v1/deadlines") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -233,7 +233,7 @@ class DeadlineControllerTest {
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
-                .post("/deadlines") {
+                .post("/api/v1/deadlines") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(requestBody)
                 }.andExpect {
@@ -258,7 +258,7 @@ class DeadlineControllerTest {
             every { service.update(deadlineId, request, userId) } returns updated
 
             mvc
-                .patch("/deadlines/{id}", deadlineId) {
+                .patch("/api/v1/deadlines/{id}", deadlineId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -279,7 +279,7 @@ class DeadlineControllerTest {
             every { service.update(deadlineId, request, userId) } throws DeadlineNotFoundException(deadlineId)
 
             mvc
-                .patch("/deadlines/{id}", deadlineId) {
+                .patch("/api/v1/deadlines/{id}", deadlineId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                     with(authenticateAs(userId))
@@ -295,7 +295,7 @@ class DeadlineControllerTest {
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
-                .patch("/deadlines/{id}", deadlineId) {
+                .patch("/api/v1/deadlines/{id}", deadlineId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(requestBody)
                 }.andExpect {
@@ -311,7 +311,7 @@ class DeadlineControllerTest {
             every { service.delete(deadlineId, userId) } just Runs
 
             mvc
-                .delete("/deadlines/{id}", deadlineId) {
+                .delete("/api/v1/deadlines/{id}", deadlineId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isNoContent() }
@@ -333,7 +333,7 @@ class DeadlineControllerTest {
             every { service.closeDeadline(deadlineId, userId) } returns updated
 
             mvc
-                .post("/deadlines/{id}/close", deadlineId) {
+                .post("/api/v1/deadlines/{id}/close", deadlineId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
@@ -350,7 +350,7 @@ class DeadlineControllerTest {
             every { service.closeDeadline(deadlineId, userId) } throws DeadlineNotFoundException(deadlineId)
 
             mvc
-                .post("/deadlines/{id}/close", deadlineId) {
+                .post("/api/v1/deadlines/{id}/close", deadlineId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
@@ -368,7 +368,7 @@ class DeadlineControllerTest {
             )
 
             mvc
-                .post("/deadlines/{id}/close", deadlineId) {
+                .post("/api/v1/deadlines/{id}/close", deadlineId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isConflict() }
@@ -389,7 +389,7 @@ class DeadlineControllerTest {
             every { service.cancelDeadline(deadlineId, userId) } returns updated
 
             mvc
-                .post("/deadlines/{id}/cancel", deadlineId) {
+                .post("/api/v1/deadlines/{id}/cancel", deadlineId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
@@ -406,7 +406,7 @@ class DeadlineControllerTest {
             every { service.cancelDeadline(deadlineId, userId) } throws DeadlineNotFoundException(deadlineId)
 
             mvc
-                .post("/deadlines/{id}/cancel", deadlineId) {
+                .post("/api/v1/deadlines/{id}/cancel", deadlineId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
@@ -424,7 +424,7 @@ class DeadlineControllerTest {
             )
 
             mvc
-                .post("/deadlines/{id}/cancel", deadlineId) {
+                .post("/api/v1/deadlines/{id}/cancel", deadlineId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isConflict() }
@@ -447,7 +447,7 @@ class DeadlineControllerTest {
             every { service.reopenDeadline(deadlineId, userId) } returns updated
 
             mvc
-                .post("/deadlines/{id}/reopen", deadlineId) {
+                .post("/api/v1/deadlines/{id}/reopen", deadlineId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
@@ -464,7 +464,7 @@ class DeadlineControllerTest {
             every { service.reopenDeadline(deadlineId, userId) } throws DeadlineNotFoundException(deadlineId)
 
             mvc
-                .post("/deadlines/{id}/reopen", deadlineId) {
+                .post("/api/v1/deadlines/{id}/reopen", deadlineId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
@@ -482,7 +482,7 @@ class DeadlineControllerTest {
             )
 
             mvc
-                .post("/deadlines/{id}/reopen", deadlineId) {
+                .post("/api/v1/deadlines/{id}/reopen", deadlineId) {
                     with(authenticateAs(userId))
                 }.andExpect {
                     status { isConflict() }
