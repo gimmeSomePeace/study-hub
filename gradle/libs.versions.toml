@@ -5,6 +5,8 @@ mockk = "1.14.5"
 spotless = "8.6.0"
 spring-boot = "4.1.0"
 spring-mockk = "5.0.1"
+jjwt = "0.13.0"
+uuid-creator = "6.1.1"
 
 [libraries]
 # version management
@@ -14,27 +16,37 @@ spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-depe
 spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
 spring-boot-starter-webmvc = { module = "org.springframework.boot:spring-boot-starter-webmvc" }
+spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
 # test starters
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 spring-boot-starter-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
 
 spring-web = { module = "org.springframework:spring-web" }
+# TODO: change starter
 spring-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+spring-security-core = { module = "org.springframework.security:spring-security-core" }
+spring-security-web = { module = "org.springframework.security:spring-security-web" }
+spring-security-config = { module = "org.springframework.security:spring-security-config" }
+spring-security-crypto = { module = "org.springframework.security:spring-security-crypto" }
+spring-security-test = { module = "org.springframework.security:spring-security-test" }
+
 spring-mockk = { module = "com.ninja-squad:springmockk", version.ref = "spring-mockk" }
 
+jakarta-servlet-api = { module = "jakarta.servlet:jakarta.servlet-api" }
 jakarta-persistence-api = { module = "jakarta.persistence:jakarta.persistence-api" }
 jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin" }
 
+jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
+uuid-creator = { module = "com.github.f4b6a3:uuid-creator", version.ref = "uuid-creator" }
+
 # JUnit
-junit-bom = { module = "org.junit:junit-bom", version.ref = "junit"}
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 kotlin-jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
 
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

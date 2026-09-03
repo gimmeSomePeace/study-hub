@@ -8,12 +8,14 @@ import io.mockk.verify
 import me.gimmesomepeace.studyhub.subject.dto.SubjectListItem
 import me.gimmesomepeace.studyhub.subject.exception.SemesterNotFoundException
 import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
+import me.gimmesomepeace.studyhub.subject.fixtures.authenticateAs
 import me.gimmesomepeace.studyhub.subject.fixtures.semesterId
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectCreateRequest
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectDetails
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectId
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectListItem
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectUpdateRequest
+import me.gimmesomepeace.studyhub.subject.fixtures.userId
 import me.gimmesomepeace.studyhub.subject.service.SubjectService
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -46,6 +48,7 @@ class SubjectControllerTest {
 
     private val subjectId = subjectId()
     private val semesterId = semesterId()
+    private val userId = userId()
 
     @Nested
     inner class GetById {
@@ -53,11 +56,12 @@ class SubjectControllerTest {
         fun `should return subject when found`() {
             val details = subjectDetails(id = subjectId)
 
-            every { service.getById(subjectId) } returns details
+            every { service.getById(subjectId, userId) } returns details
 
             mvc
                 .get("/subjects/{id}", subjectId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -72,11 +76,12 @@ class SubjectControllerTest {
 
         @Test
         fun `should return 404 when subject not found`() {
-            every { service.getById(subjectId) } throws SubjectNotFoundException(subjectId)
+            every { service.getById(subjectId, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
                 .get("/subjects/{id}", subjectId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SUBJECT_NOT_FOUND") }
@@ -94,11 +99,12 @@ class SubjectControllerTest {
             )
             val page: Page<SubjectListItem> = PageImpl(items)
 
-            every { service.list(any<Pageable>()) } returns page
+            every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
                 .get("/subjects") {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -114,11 +120,12 @@ class SubjectControllerTest {
         fun `should return empty page when no subjects`() {
             val page: Page<SubjectListItem> = PageImpl(emptyList())
 
-            every { service.list(any<Pageable>()) } returns page
+            every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
                 .get("/subjects") {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     jsonPath("$.content") { isArray() }
@@ -143,12 +150,13 @@ class SubjectControllerTest {
                 color = request.color,
             )
 
-            every { service.create(request) } returns created
+            every { service.create(request, userId) } returns created
 
             mvc
                 .post("/subjects") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isCreated() }
                     header { string("Location", "/subjects/$subjectId") }
@@ -156,19 +164,20 @@ class SubjectControllerTest {
                     jsonPath("$.id") { value(subjectId.toString()) }
                 }
 
-            verify { service.create(request) }
+            verify { service.create(request, userId) }
         }
 
         @Test
         fun `should return 404 when semester not found`() {
             val request = subjectCreateRequest(semesterId = semesterId, name = "Алгоритмы")
 
-            every { service.create(request) } throws SemesterNotFoundException(semesterId)
+            every { service.create(request, userId) } throws SemesterNotFoundException(semesterId)
 
             mvc
                 .post("/subjects") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SEMESTER_NOT_FOUND") }
@@ -202,12 +211,13 @@ class SubjectControllerTest {
                 name = newName,
             )
 
-            every { service.update(subjectId, request) } returns updated
+            every { service.update(subjectId, request, userId) } returns updated
 
             mvc
                 .patch("/subjects/{id}", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -215,19 +225,20 @@ class SubjectControllerTest {
                     jsonPath("$.name") { value(newName) }
                 }
 
-            verify { service.update(subjectId, request) }
+            verify { service.update(subjectId, request, userId) }
         }
 
         @Test
         fun `should return 404 when subject not found`() {
             val request = subjectUpdateRequest(name = "Алгоритмы и структуры данных")
 
-            every { service.update(subjectId, request) } throws SubjectNotFoundException(subjectId)
+            every { service.update(subjectId, request, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
                 .patch("/subjects/{id}", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SUBJECT_NOT_FOUND") }
@@ -239,12 +250,13 @@ class SubjectControllerTest {
             val newSemesterId = UUID.randomUUID()
             val request = subjectUpdateRequest(semesterId = newSemesterId)
 
-            every { service.update(subjectId, request) } throws SemesterNotFoundException(newSemesterId)
+            every { service.update(subjectId, request, userId) } throws SemesterNotFoundException(newSemesterId)
 
             mvc
                 .patch("/subjects/{id}", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SEMESTER_NOT_FOUND") }
@@ -270,15 +282,16 @@ class SubjectControllerTest {
     inner class Delete {
         @Test
         fun `should delete subject and return 204`() {
-            every { service.delete(subjectId) } just Runs
+            every { service.delete(subjectId, userId) } just Runs
 
             mvc
-                .delete("/subjects/{id}", subjectId)
-                .andExpect {
+                .delete("/subjects/{id}", subjectId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isNoContent() }
                 }
 
-            verify { service.delete(subjectId) }
+            verify { service.delete(subjectId, userId) }
         }
     }
 }

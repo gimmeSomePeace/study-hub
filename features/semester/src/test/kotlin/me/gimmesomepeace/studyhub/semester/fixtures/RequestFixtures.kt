@@ -1,4 +1,4 @@
-package me.gimmesomepeace.studyhub.semester.api
+package me.gimmesomepeace.studyhub.semester.fixtures
 
 import me.gimmesomepeace.studyhub.semester.api.create.SemesterCreateRequest
 import me.gimmesomepeace.studyhub.semester.api.update.SemesterUpdateRequest

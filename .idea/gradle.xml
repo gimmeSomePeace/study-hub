@@ -27,6 +27,8 @@
             <option value="$PROJECT_DIR$/features/deadline" />
             <option value="$PROJECT_DIR$/features/semester" />
             <option value="$PROJECT_DIR$/features/subject" />
+            <option value="$PROJECT_DIR$/features/user" />
+            <option value="$PROJECT_DIR$/infrastructure" />
           </set>
         </option>
       </GradleProjectSettings>

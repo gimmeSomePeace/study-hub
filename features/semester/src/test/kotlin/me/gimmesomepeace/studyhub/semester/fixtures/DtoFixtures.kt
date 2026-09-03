@@ -1,10 +1,11 @@
-package me.gimmesomepeace.studyhub.semester.dto
+package me.gimmesomepeace.studyhub.semester.fixtures
 
+import me.gimmesomepeace.studyhub.semester.dto.SemesterDetails
+import me.gimmesomepeace.studyhub.semester.dto.SemesterListItem
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-fun semesterId(): UUID = UUID.randomUUID()
 
 fun semesterDetails(
     id: UUID = semesterId(),

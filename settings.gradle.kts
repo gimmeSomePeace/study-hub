@@ -27,3 +27,5 @@ include("features:common")
 include("features:subject")
 
 include("features:deadline")
+include("features:user")
+include("infrastructure")

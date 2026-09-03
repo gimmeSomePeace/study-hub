@@ -1,4 +1,4 @@
-package me.gimmesomepeace.studyhub.semester.api
+package me.gimmesomepeace.studyhub.semester.fixtures
 
 import org.junit.jupiter.params.provider.Arguments
 import java.time.LocalDate

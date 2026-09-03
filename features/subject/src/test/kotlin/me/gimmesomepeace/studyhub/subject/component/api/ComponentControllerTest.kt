@@ -17,7 +17,9 @@ import me.gimmesomepeace.studyhub.subject.component.fixtures.componentUpdateRequ
 import me.gimmesomepeace.studyhub.subject.component.service.ComponentService
 import me.gimmesomepeace.studyhub.subject.exception.SubjectExceptionHandler
 import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
+import me.gimmesomepeace.studyhub.subject.fixtures.authenticateAs
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectId
+import me.gimmesomepeace.studyhub.subject.fixtures.userId
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -50,6 +52,7 @@ class ComponentControllerTest {
 
     private val subjectId = subjectId()
     private val componentId = componentId()
+    private val userId = userId()
 
     @Nested
     inner class GetById {
@@ -64,11 +67,12 @@ class ComponentControllerTest {
                 notes = "Базовые понятия",
             )
 
-            every { service.getById(subjectId, componentId) } returns details
+            every { service.getById(subjectId, componentId, userId) } returns details
 
             mvc
                 .get("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -85,32 +89,30 @@ class ComponentControllerTest {
 
         @Test
         fun `should return 404 when subject not found`() {
-            every { service.getById(subjectId, componentId) } throws SubjectNotFoundException(subjectId)
+            every { service.getById(subjectId, componentId, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
                 .get("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SUBJECT_NOT_FOUND") }
                 }
-
-            verify { service.getById(subjectId, componentId) }
         }
 
         @Test
         fun `should return 404 when component not found`() {
-            every { service.getById(subjectId, componentId) } throws ComponentNotFoundException(componentId)
+            every { service.getById(subjectId, componentId, userId) } throws ComponentNotFoundException(componentId)
 
             mvc
                 .get("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("COMPONENT_NOT_FOUND") }
                 }
-
-            verify { service.getById(subjectId, componentId) }
         }
     }
 
@@ -124,11 +126,12 @@ class ComponentControllerTest {
             )
             val page: Page<ComponentListItem> = PageImpl(items)
 
-            every { service.list(subjectId, any<Pageable>()) } returns page
+            every { service.list(subjectId, any<Pageable>(), userId) } returns page
 
             mvc
                 .get("/subjects/{subjectId}/components", subjectId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -144,11 +147,12 @@ class ComponentControllerTest {
         fun `should return empty page when no components`() {
             val page: Page<ComponentListItem> = PageImpl(emptyList())
 
-            every { service.list(subjectId, any<Pageable>()) } returns page
+            every { service.list(subjectId, any<Pageable>(), userId) } returns page
 
             mvc
                 .get("/subjects/{subjectId}/components", subjectId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     jsonPath("$.content") { isArray() }
@@ -158,11 +162,12 @@ class ComponentControllerTest {
 
         @Test
         fun `should return 404 when subject not found`() {
-            every { service.list(subjectId, any<Pageable>()) } throws SubjectNotFoundException(subjectId)
+            every { service.list(subjectId, any<Pageable>(), userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
                 .get("/subjects/{subjectId}/components", subjectId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SUBJECT_NOT_FOUND") }
@@ -190,12 +195,13 @@ class ComponentControllerTest {
                 notes = request.notes,
             )
 
-            every { service.create(subjectId, request) } returns created
+            every { service.create(subjectId, request, userId) } returns created
 
             mvc
                 .post("/subjects/{subjectId}/components", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isCreated() }
                     header { string("Location", "/subjects/$subjectId/components/$componentId") }
@@ -204,25 +210,24 @@ class ComponentControllerTest {
                     jsonPath("$.subjectId") { value(subjectId.toString()) }
                 }
 
-            verify { service.create(subjectId, request) }
+            verify { service.create(subjectId, request, userId) }
         }
 
         @Test
         fun `should return 404 when subject not found`() {
             val request = componentCreateRequest(title = "Лекция 1: Введение")
 
-            every { service.create(subjectId, request) } throws SubjectNotFoundException(subjectId)
+            every { service.create(subjectId, request, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
                 .post("/subjects/{subjectId}/components", subjectId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SUBJECT_NOT_FOUND") }
                 }
-
-            verify { service.create(subjectId, request) }
         }
 
         @ParameterizedTest
@@ -252,12 +257,13 @@ class ComponentControllerTest {
                 title = "Лекция 1: Обновлённое название",
             )
 
-            every { service.update(subjectId, componentId, request) } returns updated
+            every { service.update(subjectId, componentId, request, userId) } returns updated
 
             mvc
                 .patch("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -265,43 +271,43 @@ class ComponentControllerTest {
                     jsonPath("$.title") { value("Лекция 1: Обновлённое название") }
                 }
 
-            verify { service.update(subjectId, componentId, request) }
+            verify { service.update(subjectId, componentId, request, userId) }
         }
 
         @Test
         fun `should return 404 when subject not found`() {
             val request = componentUpdateRequest(title = "Лекция 1: Обновлённое название")
 
-            every { service.update(subjectId, componentId, request) } throws SubjectNotFoundException(subjectId)
+            every { service.update(subjectId, componentId, request, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
                 .patch("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SUBJECT_NOT_FOUND") }
                 }
-
-            verify { service.update(subjectId, componentId, request) }
         }
 
         @Test
         fun `should return 404 when component not found`() {
             val request = componentUpdateRequest(title = "Лекция 1: Обновлённое название")
 
-            every { service.update(subjectId, componentId, request) } throws ComponentNotFoundException(componentId)
+            every { service.update(subjectId, componentId, request, userId) } throws ComponentNotFoundException(
+                componentId,
+            )
 
             mvc
                 .patch("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("COMPONENT_NOT_FOUND") }
                 }
-
-            verify { service.update(subjectId, componentId, request) }
         }
 
         @ParameterizedTest
@@ -323,20 +329,21 @@ class ComponentControllerTest {
     inner class Delete {
         @Test
         fun `should delete component and return 204`() {
-            every { service.delete(subjectId, componentId) } just Runs
+            every { service.delete(subjectId, componentId, userId) } just Runs
 
             mvc
-                .delete("/subjects/{subjectId}/components/{id}", subjectId, componentId)
-                .andExpect {
+                .delete("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isNoContent() }
                 }
 
-            verify { service.delete(subjectId, componentId) }
+            verify { service.delete(subjectId, componentId, userId) }
         }
 
         @Test
         fun `should return 404 when subject not found`() {
-            every { service.delete(subjectId, componentId) } throws SubjectNotFoundException(subjectId)
+            every { service.delete(subjectId, componentId, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
                 .delete("/subjects/{subjectId}/components/{id}", subjectId, componentId)
@@ -345,7 +352,7 @@ class ComponentControllerTest {
                     jsonPath("$.code") { value("SUBJECT_NOT_FOUND") }
                 }
 
-            verify { service.delete(subjectId, componentId) }
+            verify { service.delete(subjectId, componentId, userId) }
         }
     }
 }

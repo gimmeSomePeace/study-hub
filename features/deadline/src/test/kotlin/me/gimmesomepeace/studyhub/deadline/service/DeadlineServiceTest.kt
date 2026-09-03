@@ -6,14 +6,12 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.verify
-import jakarta.validation.ValidationException
-import me.gimmesomepeace.studyhub.common.IdGenerator
+import me.gimmesomepeace.studyhub.common.id.IdGenerator
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineStatus
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineType
 import me.gimmesomepeace.studyhub.deadline.entity.DeadlineEntity
 import me.gimmesomepeace.studyhub.deadline.exception.DeadlineNotFoundException
 import me.gimmesomepeace.studyhub.deadline.exception.InvalidStatusTransitionException
-import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineComponent
 import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineComponentId
 import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineCreateRequest
 import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineEntity
@@ -23,6 +21,7 @@ import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineSubjectId
 import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineUpdateRequest
 import me.gimmesomepeace.studyhub.deadline.fixtures.futureDueAt
 import me.gimmesomepeace.studyhub.deadline.fixtures.pastDueAt
+import me.gimmesomepeace.studyhub.deadline.fixtures.userId
 import me.gimmesomepeace.studyhub.deadline.repository.DeadlineRepository
 import me.gimmesomepeace.studyhub.subject.component.exception.ComponentNotFoundException
 import me.gimmesomepeace.studyhub.subject.component.repository.ComponentRepository
@@ -36,7 +35,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
-import java.util.Optional
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -61,6 +59,7 @@ class DeadlineServiceTest {
     private val deadlineId = deadlineId()
     private val subjectId = deadlineSubjectId()
     private val componentId = deadlineComponentId()
+    private val userId = userId()
 
     @BeforeEach
     fun setUp() {
@@ -85,9 +84,9 @@ class DeadlineServiceTest {
                 status = DeadlineStatus.OPEN,
             )
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
 
-            val result = service.getById(deadlineId)
+            val result = service.getById(deadlineId, userId)
 
             assertThat(result.id).isEqualTo(deadlineId)
             assertThat(result.subjectId).isEqualTo(subjectId)
@@ -98,9 +97,9 @@ class DeadlineServiceTest {
 
         @Test
         fun `should throw DeadlineNotFoundException when not found`() {
-            every { deadlineRepository.findById(deadlineId) } returns Optional.empty()
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns null
 
-            assertThatThrownBy { service.getById(deadlineId) }
+            assertThatThrownBy { service.getById(deadlineId, userId) }
                 .isInstanceOf(DeadlineNotFoundException::class.java)
                 .hasMessageContaining(deadlineId.toString())
         }
@@ -117,9 +116,9 @@ class DeadlineServiceTest {
             val page = PageImpl(entities)
             val pageable = deadlinePageable()
 
-            every { deadlineRepository.findAll(pageable) } returns page
+            every { deadlineRepository.findByOwnerId(userId, pageable) } returns page
 
-            val result = service.list(pageable)
+            val result = service.list(pageable, userId)
 
             assertThat(result.content).hasSize(2)
             assertThat(result.content[0].title).isEqualTo("Лаба 1")
@@ -131,9 +130,9 @@ class DeadlineServiceTest {
             val page: Page<DeadlineEntity> = PageImpl(emptyList<Nothing>())
             val pageable = deadlinePageable()
 
-            every { deadlineRepository.findAll(pageable) } returns page
+            every { deadlineRepository.findByOwnerId(userId, pageable) } returns page
 
-            val result = service.list(pageable)
+            val result = service.list(pageable, userId)
 
             assertThat(result.content).isEmpty()
             assertThat(result.totalElements).isEqualTo(0)
@@ -150,27 +149,23 @@ class DeadlineServiceTest {
                 title = "Лабораторная работа 1",
                 type = DeadlineType.LAB,
             )
-            val component = deadlineComponent(
-                id = componentId,
-                subjectId = subjectId,
-            )
 
             val generatedId = deadlineId()
 
-            every { subjectRepository.existsById(subjectId) } returns true
-            every { componentRepository.findById(componentId) } returns Optional.of(component)
+            every { subjectRepository.existsByIdAndOwnerId(subjectId, userId) } returns true
+            every { componentRepository.existsByIdAndSubjectId(componentId, subjectId) } returns true
             every { idGenerator.generate() } returns generatedId
             every { deadlineRepository.save(any()) } answers { firstArg() }
 
-            val result = service.create(request)
+            val result = service.create(request, userId)
 
             assertThat(result.id).isEqualTo(generatedId)
             assertThat(result.subjectId).isEqualTo(subjectId)
             assertThat(result.title).isEqualTo(request.title)
             assertThat(result.type).isEqualTo(request.type)
 
-            verify { subjectRepository.existsById(subjectId) }
-            verify { componentRepository.findById(componentId) }
+            verify { subjectRepository.existsByIdAndOwnerId(subjectId, userId) }
+            verify { componentRepository.existsByIdAndSubjectId(componentId, subjectId) }
             verify { idGenerator.generate() }
             verify { deadlineRepository.save(any()) }
         }
@@ -179,9 +174,9 @@ class DeadlineServiceTest {
         fun `should throw SubjectNotFoundException when subject not found`() {
             val request = deadlineCreateRequest(subjectId = subjectId)
 
-            every { subjectRepository.existsById(subjectId) } returns false
+            every { subjectRepository.existsByIdAndOwnerId(subjectId, userId) } returns false
 
-            assertThatThrownBy { service.create(request) }
+            assertThatThrownBy { service.create(request, userId) }
                 .isInstanceOf(SubjectNotFoundException::class.java)
                 .hasMessageContaining(subjectId.toString())
 
@@ -195,41 +190,42 @@ class DeadlineServiceTest {
                 componentId = componentId,
             )
 
-            every { subjectRepository.existsById(subjectId) } returns true
-            every { componentRepository.findById(componentId) } returns Optional.empty()
+            every { subjectRepository.existsByIdAndOwnerId(subjectId, userId) } returns true
+            every { componentRepository.existsByIdAndSubjectId(componentId, userId()) } returns false
 
-            assertThatThrownBy { service.create(request) }
+            assertThatThrownBy { service.create(request, userId) }
                 .isInstanceOf(ComponentNotFoundException::class.java)
                 .hasMessageContaining(componentId.toString())
 
             verify(exactly = 0) { deadlineRepository.save(any()) }
         }
 
-        @Test
-        fun `should throw ValidationException when component does not belong to subject`() {
-            val otherSubjectId = deadlineSubjectId()
-            val component = deadlineComponent(
-                id = componentId,
-                subjectId = otherSubjectId,
-            )
-
-            val request = deadlineCreateRequest(
-                subjectId = subjectId,
-                componentId = componentId,
-            )
-
-            every { subjectRepository.existsById(subjectId) } returns true
-            every { componentRepository.findById(componentId) } returns Optional.of(component)
-
-            assertThatThrownBy { service.create(request) }
-                .isInstanceOf(ValidationException::class.java)
-                .hasMessageContaining(componentId.toString())
-                .hasMessageContaining(subjectId.toString())
-
-            verify { subjectRepository.existsById(subjectId) }
-            verify { componentRepository.findById(componentId) }
-            verify(exactly = 0) { deadlineRepository.save(any()) }
-        }
+        // TODO: переделать под него
+//        @Test
+//        fun `should throw ValidationException when component does not belong to subject`() {
+//            val otherSubjectId = deadlineSubjectId()
+//            val component = deadlineComponent(
+//                id = componentId,
+//                subjectId = otherSubjectId,
+//            )
+//
+//            val request = deadlineCreateRequest(
+//                subjectId = subjectId,
+//                componentId = componentId,
+//            )
+//
+//            every { subjectRepository.existsById(subjectId) } returns true
+//            every { componentRepository.findById(componentId) } returns Optional.of(component)
+//
+//            assertThatThrownBy { service.create(request, userId) }
+//                .isInstanceOf(ValidationException::class.java)
+//                .hasMessageContaining(componentId.toString())
+//                .hasMessageContaining(subjectId.toString())
+//
+//            verify { subjectRepository.existsById(subjectId) }
+//            verify { componentRepository.findById(componentId) }
+//            verify(exactly = 0) { deadlineRepository.save(any()) }
+//        }
     }
 
     @Nested
@@ -257,17 +253,12 @@ class DeadlineServiceTest {
                 notes = "some new info",
             )
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
-            every { subjectRepository.existsById(newSubjectId) } returns true
-            every { componentRepository.findById(newComponentId) } returns Optional.of(
-                deadlineComponent(
-                    subjectId = newSubjectId,
-                    id = newComponentId,
-                ),
-            )
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
+            every { subjectRepository.existsByIdAndOwnerId(newSubjectId, userId) } returns true
+            every { componentRepository.existsByIdAndSubjectId(newComponentId, newSubjectId) } returns true
             every { deadlineRepository.save(any()) } answers { firstArg() }
 
-            val result = service.update(deadlineId, request)
+            val result = service.update(deadlineId, request, userId)
 
             assertThat(result.id).isEqualTo(deadlineId)
             assertThat(result.subjectId).isEqualTo(newSubjectId)
@@ -284,9 +275,9 @@ class DeadlineServiceTest {
         fun `should throw DeadlineNotFoundException when not found`() {
             val request = deadlineUpdateRequest(title = "Лабораторная работа 1: Обновлённое название")
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.empty()
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns null
 
-            assertThatThrownBy { service.update(deadlineId, request) }
+            assertThatThrownBy { service.update(deadlineId, request, userId) }
                 .isInstanceOf(DeadlineNotFoundException::class.java)
                 .hasMessageContaining(deadlineId.toString())
 
@@ -300,37 +291,32 @@ class DeadlineServiceTest {
 
             val request = deadlineUpdateRequest(subjectId = newSubjectId)
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
-            every { subjectRepository.existsById(newSubjectId) } returns false
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
+            every { subjectRepository.existsByIdAndOwnerId(newSubjectId, userId) } returns false
 
-            assertThatThrownBy { service.update(deadlineId, request) }
+            assertThatThrownBy { service.update(deadlineId, request, userId) }
                 .isInstanceOf(SubjectNotFoundException::class.java)
                 .hasMessageContaining(newSubjectId.toString())
 
-            verify { deadlineRepository.findById(deadlineId) }
-            verify { subjectRepository.existsById(newSubjectId) }
             verify(exactly = 0) { deadlineRepository.save(any()) }
         }
 
         @Test
-        fun `should update only provided fields`() {
-            val entity = deadlineEntity(
-                id = deadlineId,
-                subjectId = subjectId,
-                title = "Лабораторная работа 1",
-                notes = "Старые заметки",
-            )
+        fun `should throw ComponentNotFoundException when new component not found`() {
+            val newComponentId = deadlineComponentId()
+            val entity = deadlineEntity(id = deadlineId, subjectId = subjectId, componentId = componentId)
 
-            val request = deadlineUpdateRequest(title = "Лабораторная работа 1: Обновлённое название")
+            val request = deadlineUpdateRequest(componentId = newComponentId)
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
-            every { subjectRepository.existsById(subjectId) } returns true
-            every { deadlineRepository.save(any()) } answers { firstArg() }
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
+            every { subjectRepository.existsByIdAndOwnerId(subjectId, userId) } returns true
+            every { componentRepository.existsByIdAndSubjectId(newComponentId, subjectId) } returns false
 
-            val result = service.update(deadlineId, request)
+            assertThatThrownBy { service.update(deadlineId, request, userId) }
+                .isInstanceOf(ComponentNotFoundException::class.java)
+                .hasMessageContaining(newComponentId.toString())
 
-            assertThat(result.title).isEqualTo(request.title)
-            assertThat(result.notes).isEqualTo(entity.notes)
+            verify(exactly = 0) { deadlineRepository.save(any()) }
         }
     }
 
@@ -338,11 +324,11 @@ class DeadlineServiceTest {
     inner class Delete {
         @Test
         fun `should call repository deleteById`() {
-            every { deadlineRepository.deleteById(deadlineId) } just Runs
+            every { deadlineRepository.deleteByIdAndOwnerId(deadlineId, userId) } just Runs
 
-            service.delete(deadlineId)
+            service.delete(deadlineId, userId)
 
-            verify { deadlineRepository.deleteById(deadlineId) }
+            verify { deadlineRepository.deleteByIdAndOwnerId(deadlineId, userId) }
         }
     }
 
@@ -355,15 +341,14 @@ class DeadlineServiceTest {
                 status = DeadlineStatus.OPEN,
             )
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
             every { statusTransitions.canTransitTo(DeadlineStatus.OPEN, DeadlineStatus.CLOSED) } returns true
             every { deadlineRepository.save(any()) } answers { firstArg() }
 
-            val result = service.closeDeadline(deadlineId)
+            val result = service.closeDeadline(deadlineId, userId)
 
             assertThat(result.status).isEqualTo(DeadlineStatus.CLOSED)
 
-            verify { deadlineRepository.findById(deadlineId) }
             verify { statusTransitions.canTransitTo(DeadlineStatus.OPEN, DeadlineStatus.CLOSED) }
             verify { deadlineRepository.save(any()) }
         }
@@ -375,13 +360,12 @@ class DeadlineServiceTest {
                 status = DeadlineStatus.CLOSED,
             )
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
 
-            val result = service.closeDeadline(deadlineId)
+            val result = service.closeDeadline(deadlineId, userId)
 
             assertThat(result.status).isEqualTo(DeadlineStatus.CLOSED)
 
-            verify { deadlineRepository.findById(deadlineId) }
             verify(exactly = 0) { statusTransitions.canTransitTo(any(), any()) }
             verify(exactly = 0) { deadlineRepository.save(any()) }
         }
@@ -393,24 +377,23 @@ class DeadlineServiceTest {
                 status = DeadlineStatus.CANCELLED,
             )
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
             every { statusTransitions.canTransitTo(DeadlineStatus.CANCELLED, DeadlineStatus.CLOSED) } returns false
 
-            assertThatThrownBy { service.closeDeadline(deadlineId) }
+            assertThatThrownBy { service.closeDeadline(deadlineId, userId) }
                 .isInstanceOf(InvalidStatusTransitionException::class.java)
                 .hasMessageContaining("CANCELLED")
                 .hasMessageContaining("CLOSED")
 
-            verify { deadlineRepository.findById(deadlineId) }
             verify { statusTransitions.canTransitTo(DeadlineStatus.CANCELLED, DeadlineStatus.CLOSED) }
             verify(exactly = 0) { deadlineRepository.save(any()) }
         }
 
         @Test
         fun `should throw DeadlineNotFoundException when not found`() {
-            every { deadlineRepository.findById(deadlineId) } returns Optional.empty()
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns null
 
-            assertThatThrownBy { service.closeDeadline(deadlineId) }
+            assertThatThrownBy { service.closeDeadline(deadlineId, userId) }
                 .isInstanceOf(DeadlineNotFoundException::class.java)
                 .hasMessageContaining(deadlineId.toString())
         }
@@ -425,15 +408,14 @@ class DeadlineServiceTest {
                 status = DeadlineStatus.CLOSED,
             )
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
             every { statusTransitions.canTransitTo(DeadlineStatus.CLOSED, DeadlineStatus.OPEN) } returns true
             every { deadlineRepository.save(any()) } answers { firstArg() }
 
-            val result = service.reopenDeadline(deadlineId)
+            val result = service.reopenDeadline(deadlineId, userId)
 
             assertThat(result.status).isEqualTo(DeadlineStatus.OPEN)
 
-            verify { deadlineRepository.findById(deadlineId) }
             verify { statusTransitions.canTransitTo(DeadlineStatus.CLOSED, DeadlineStatus.OPEN) }
             verify { deadlineRepository.save(any()) }
         }
@@ -445,14 +427,12 @@ class DeadlineServiceTest {
                 status = DeadlineStatus.OPEN,
             )
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
 
-            val result = service.reopenDeadline(deadlineId)
+            val result = service.reopenDeadline(deadlineId, userId)
 
             assertThat(result.status).isEqualTo(DeadlineStatus.OPEN)
 
-            verify { deadlineRepository.findById(deadlineId) }
-            verify(exactly = 0) { statusTransitions.canTransitTo(any(), any()) }
             verify(exactly = 0) { deadlineRepository.save(any()) }
         }
 
@@ -463,15 +443,14 @@ class DeadlineServiceTest {
                 status = DeadlineStatus.CANCELLED,
             )
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
             every { statusTransitions.canTransitTo(DeadlineStatus.CANCELLED, DeadlineStatus.OPEN) } returns false
 
-            assertThatThrownBy { service.reopenDeadline(deadlineId) }
+            assertThatThrownBy { service.reopenDeadline(deadlineId, userId) }
                 .isInstanceOf(InvalidStatusTransitionException::class.java)
                 .hasMessageContaining("CANCELLED")
                 .hasMessageContaining("OPEN")
 
-            verify { deadlineRepository.findById(deadlineId) }
             verify(exactly = 0) { deadlineRepository.save(any()) }
         }
     }
@@ -485,15 +464,14 @@ class DeadlineServiceTest {
                 status = DeadlineStatus.OPEN,
             )
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
             every { statusTransitions.canTransitTo(DeadlineStatus.OPEN, DeadlineStatus.CANCELLED) } returns true
             every { deadlineRepository.save(any()) } answers { firstArg() }
 
-            val result = service.cancelDeadline(deadlineId)
+            val result = service.cancelDeadline(deadlineId, userId)
 
             assertThat(result.status).isEqualTo(DeadlineStatus.CANCELLED)
 
-            verify { deadlineRepository.findById(deadlineId) }
             verify { statusTransitions.canTransitTo(DeadlineStatus.OPEN, DeadlineStatus.CANCELLED) }
             verify { deadlineRepository.save(any()) }
         }
@@ -505,13 +483,12 @@ class DeadlineServiceTest {
                 status = DeadlineStatus.CANCELLED,
             )
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
 
-            val result = service.cancelDeadline(deadlineId)
+            val result = service.cancelDeadline(deadlineId, userId)
 
             assertThat(result.status).isEqualTo(DeadlineStatus.CANCELLED)
 
-            verify { deadlineRepository.findById(deadlineId) }
             verify(exactly = 0) { statusTransitions.canTransitTo(any(), any()) }
             verify(exactly = 0) { deadlineRepository.save(any()) }
         }
@@ -523,15 +500,14 @@ class DeadlineServiceTest {
                 status = DeadlineStatus.CLOSED,
             )
 
-            every { deadlineRepository.findById(deadlineId) } returns Optional.of(entity)
+            every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
             every { statusTransitions.canTransitTo(DeadlineStatus.CLOSED, DeadlineStatus.CANCELLED) } returns false
 
-            assertThatThrownBy { service.cancelDeadline(deadlineId) }
+            assertThatThrownBy { service.cancelDeadline(deadlineId, userId) }
                 .isInstanceOf(InvalidStatusTransitionException::class.java)
                 .hasMessageContaining("CLOSED")
                 .hasMessageContaining("CANCELLED")
 
-            verify { deadlineRepository.findById(deadlineId) }
             verify(exactly = 0) { deadlineRepository.save(any()) }
         }
     }

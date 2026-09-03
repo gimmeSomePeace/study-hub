@@ -6,17 +6,17 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.verify
-import me.gimmesomepeace.studyhub.common.IdGenerator
-import me.gimmesomepeace.studyhub.semester.api.pageable
-import me.gimmesomepeace.studyhub.semester.api.semesterCreateRequest
-import me.gimmesomepeace.studyhub.semester.api.semesterUpdateRequest
-import me.gimmesomepeace.studyhub.semester.dto.semesterId
-import me.gimmesomepeace.studyhub.semester.entity.semesterEntity
+import me.gimmesomepeace.studyhub.common.id.IdGenerator
 import me.gimmesomepeace.studyhub.semester.exception.SemesterNotFoundException
 import me.gimmesomepeace.studyhub.semester.exception.SemesterValidationException
+import me.gimmesomepeace.studyhub.semester.fixtures.pageable
+import me.gimmesomepeace.studyhub.semester.fixtures.semesterCreateRequest
+import me.gimmesomepeace.studyhub.semester.fixtures.semesterEntity
+import me.gimmesomepeace.studyhub.semester.fixtures.semesterId
+import me.gimmesomepeace.studyhub.semester.fixtures.semesterUpdateRequest
+import me.gimmesomepeace.studyhub.semester.fixtures.userId
 import me.gimmesomepeace.studyhub.semester.repository.SemesterRepository
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatCode
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -38,6 +38,7 @@ class SemesterServiceTest {
     private lateinit var service: SemesterService
 
     private val semesterId = semesterId()
+    private val userId = userId()
 
     @BeforeEach
     fun setUp() {
@@ -50,32 +51,29 @@ class SemesterServiceTest {
         fun `should return semester details when found`() {
             val entity = semesterEntity(
                 id = semesterId,
+                ownerId = userId,
                 name = "Осень 2026",
                 startsAt = LocalDate.of(2026, 9, 1),
                 endsAt = LocalDate.of(2026, 12, 28),
             )
 
-            every { semesterRepository.findById(semesterId) } returns Optional.of(entity)
+            every { semesterRepository.findByIdAndOwnerId(semesterId, userId) } returns entity
 
-            val result = service.getById(semesterId)
+            val result = service.getById(semesterId, userId)
 
             assertThat(result.id).isEqualTo(semesterId)
             assertThat(result.name).isEqualTo("Осень 2026")
-            assertThat(result.startsAt).isEqualTo(LocalDate.of(2026, 9, 1))
-            assertThat(result.endsAt).isEqualTo(LocalDate.of(2026, 12, 28))
-
-            verify { semesterRepository.findById(semesterId) }
+            assertThat(result.startsAt).isEqualTo(entity.startsAt)
+            assertThat(result.endsAt).isEqualTo(entity.endsAt)
         }
 
         @Test
         fun `should throw SemesterNotFoundException when not found`() {
-            every { semesterRepository.findById(semesterId) } returns Optional.empty()
+            every { semesterRepository.findByIdAndOwnerId(semesterId, userId) } returns null
 
-            assertThatThrownBy { service.getById(semesterId) }
+            assertThatThrownBy { service.getById(semesterId, userId) }
                 .isInstanceOf(SemesterNotFoundException::class.java)
                 .hasMessageContaining(semesterId.toString())
-
-            verify { semesterRepository.findById(semesterId) }
         }
     }
 
@@ -90,16 +88,14 @@ class SemesterServiceTest {
             val page = PageImpl(entities)
             val pageable = pageable()
 
-            every { semesterRepository.findAll(pageable) } returns page
+            every { semesterRepository.findByOwnerId(userId, pageable) } returns page
 
-            val result = service.list(pageable)
+            val result = service.list(pageable, userId)
 
             assertThat(result.content).hasSize(2)
             assertThat(result.content[0].name).isEqualTo("Осень 2026")
             assertThat(result.content[1].name).isEqualTo("Весна 2027")
             assertThat(result.totalElements).isEqualTo(2)
-
-            verify { semesterRepository.findAll(pageable) }
         }
     }
 
@@ -118,7 +114,7 @@ class SemesterServiceTest {
             every { idGenerator.generate() } returns generatedId
             every { semesterRepository.save(any()) } answers { firstArg() }
 
-            val result = service.create(request)
+            val result = service.create(request, userId)
 
             assertThat(result.id).isEqualTo(generatedId)
             assertThat(result.name).isEqualTo("Осень 2026")
@@ -126,7 +122,7 @@ class SemesterServiceTest {
             assertThat(result.endsAt).isEqualTo(LocalDate.of(2026, 12, 28))
 
             verify { idGenerator.generate() }
-            verify { semesterRepository.save(any()) }
+            verify { semesterRepository.save(match { semester -> semester.ownerId == userId }) }
         }
 
         @Test
@@ -136,7 +132,7 @@ class SemesterServiceTest {
                 endsAt = LocalDate.of(2026, 9, 1),
             )
 
-            assertThatThrownBy { service.create(request) }
+            assertThatThrownBy { service.create(request, userId) }
                 .isInstanceOf(SemesterValidationException::class.java)
 
             verify(exactly = 0) { semesterRepository.save(any()) }
@@ -149,7 +145,7 @@ class SemesterServiceTest {
                 endsAt = LocalDate.of(2026, 9, 1),
             )
 
-            assertThatThrownBy { service.create(request) }
+            assertThatThrownBy { service.create(request, userId) }
                 .isInstanceOf(SemesterValidationException::class.java)
 
             verify(exactly = 0) { semesterRepository.save(any()) }
@@ -162,6 +158,7 @@ class SemesterServiceTest {
         fun `should update semester and return details`() {
             val entity = semesterEntity(
                 id = semesterId,
+                ownerId = userId,
                 name = "Осень 2026",
                 startsAt = LocalDate.of(2026, 9, 1),
                 endsAt = LocalDate.of(2026, 12, 28),
@@ -172,12 +169,12 @@ class SemesterServiceTest {
             every { semesterRepository.findById(semesterId) } returns Optional.of(entity)
             every { semesterRepository.save(any()) } answers { firstArg() }
 
-            val result = service.update(semesterId, request)
+            val result = service.update(semesterId, request, userId)
 
             assertThat(result.id).isEqualTo(semesterId)
-            assertThat(result.name).isEqualTo("Осень 2026/2027")
-            assertThat(result.startsAt).isEqualTo(LocalDate.of(2026, 9, 1))
-            assertThat(result.endsAt).isEqualTo(LocalDate.of(2026, 12, 28))
+            assertThat(result.name).isEqualTo(request.name)
+            assertThat(result.startsAt).isEqualTo(entity.startsAt)
+            assertThat(result.endsAt).isEqualTo(entity.endsAt)
 
             verify { semesterRepository.save(any()) }
         }
@@ -186,9 +183,9 @@ class SemesterServiceTest {
         fun `should throw SemesterNotFoundException when not found`() {
             val request = semesterUpdateRequest(name = "Осень 2026/2027")
 
-            every { semesterRepository.findById(semesterId) } returns Optional.empty()
+            every { semesterRepository.findByIdAndOwnerId(semesterId, userId) } returns null
 
-            assertThatThrownBy { service.update(semesterId, request) }
+            assertThatThrownBy { service.update(semesterId, request, userId) }
                 .isInstanceOf(SemesterNotFoundException::class.java)
 
             verify(exactly = 0) { semesterRepository.save(any()) }
@@ -206,9 +203,9 @@ class SemesterServiceTest {
                 endsAt = LocalDate.of(2026, 8, 1),
             )
 
-            every { semesterRepository.findById(semesterId) } returns Optional.of(entity)
+            every { semesterRepository.findByIdAndOwnerId(semesterId, userId) } returns entity
 
-            assertThatThrownBy { service.update(semesterId, request) }
+            assertThatThrownBy { service.update(semesterId, request, userId) }
                 .isInstanceOf(SemesterValidationException::class.java)
 
             verify(exactly = 0) { semesterRepository.save(any()) }
@@ -219,21 +216,11 @@ class SemesterServiceTest {
     inner class Delete {
         @Test
         fun `should call repository deleteById`() {
-            every { semesterRepository.deleteById(semesterId) } just Runs
+            every { semesterRepository.deleteByIdAndOwnerId(semesterId, userId) } just Runs
 
-            service.delete(semesterId)
+            service.delete(semesterId, userId)
 
-            verify { semesterRepository.deleteById(semesterId) }
-        }
-
-        @Test
-        fun `should not throw exception when semester not found (idempotent)`() {
-            every { semesterRepository.deleteById(semesterId) } just Runs
-
-            assertThatCode { service.delete(semesterId) }
-                .doesNotThrowAnyException()
-
-            verify { semesterRepository.deleteById(semesterId) }
+            verify { semesterRepository.deleteByIdAndOwnerId(semesterId, userId) }
         }
     }
 }

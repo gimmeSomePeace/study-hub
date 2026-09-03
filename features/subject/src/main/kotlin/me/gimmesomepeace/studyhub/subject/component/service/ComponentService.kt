@@ -1,6 +1,6 @@
 package me.gimmesomepeace.studyhub.subject.component.service
 
-import me.gimmesomepeace.studyhub.common.IdGenerator
+import me.gimmesomepeace.studyhub.common.id.IdGenerator
 import me.gimmesomepeace.studyhub.subject.component.api.create.ComponentCreateRequest
 import me.gimmesomepeace.studyhub.subject.component.api.update.ComponentUpdateRequest
 import me.gimmesomepeace.studyhub.subject.component.dto.ComponentDetails
@@ -8,10 +8,10 @@ import me.gimmesomepeace.studyhub.subject.component.dto.ComponentListItem
 import me.gimmesomepeace.studyhub.subject.component.entity.ComponentEntity
 import me.gimmesomepeace.studyhub.subject.component.exception.ComponentNotFoundException
 import me.gimmesomepeace.studyhub.subject.component.repository.ComponentRepository
-import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
-import me.gimmesomepeace.studyhub.subject.repository.SubjectRepository
 import me.gimmesomepeace.studyhub.subject.component.toDetails
 import me.gimmesomepeace.studyhub.subject.component.toListItem
+import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
+import me.gimmesomepeace.studyhub.subject.repository.SubjectRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -30,22 +30,23 @@ class ComponentService(
     fun getById(
         subjectId: UUID,
         id: UUID,
+        userId: UUID,
     ): ComponentDetails {
-        ensureSubjectExists(subjectId)
+        ensureSubjectExistsAndBelongsToUser(subjectId, userId)
 
         return componentRepository
-            .findById(id)
-            .filter { it.subjectId == subjectId }
-            .orElseThrow { ComponentNotFoundException(id) }
-            .toDetails()
+            .findByIdAndSubjectId(id, subjectId)
+            ?.toDetails()
+            ?: throw ComponentNotFoundException(id)
     }
 
     @Transactional(readOnly = true)
     fun list(
         subjectId: UUID,
         pageable: Pageable,
+        userId: UUID,
     ): Page<ComponentListItem> {
-        ensureSubjectExists(subjectId)
+        ensureSubjectExistsAndBelongsToUser(subjectId, userId)
 
         val page = componentRepository.findBySubjectId(subjectId, pageable)
         return page.map { it.toListItem() }
@@ -54,8 +55,9 @@ class ComponentService(
     fun create(
         subjectId: UUID,
         request: ComponentCreateRequest,
+        userId: UUID,
     ): ComponentDetails {
-        ensureSubjectExists(subjectId)
+        ensureSubjectExistsAndBelongsToUser(subjectId, userId)
 
         val component = ComponentEntity(
             id = idGenerator.generate(),
@@ -74,13 +76,13 @@ class ComponentService(
         subjectId: UUID,
         id: UUID,
         request: ComponentUpdateRequest,
+        userId: UUID,
     ): ComponentDetails {
-        ensureSubjectExists(subjectId)
+        ensureSubjectExistsAndBelongsToUser(subjectId, userId)
 
         val component = componentRepository
-            .findById(id)
-            .filter { it.subjectId == subjectId }
-            .orElseThrow { ComponentNotFoundException(id) }
+            .findByIdAndSubjectId(id, subjectId)
+            ?: throw ComponentNotFoundException(id)
 
         if (request.type != null) component.type = request.type
         if (request.title != null) component.title = request.title
@@ -95,13 +97,17 @@ class ComponentService(
     fun delete(
         subjectId: UUID,
         id: UUID,
+        userId: UUID,
     ) {
-        ensureSubjectExists(subjectId)
-        componentRepository.deleteBySubjectIdAndId(subjectId, id)
+        ensureSubjectExistsAndBelongsToUser(subjectId, userId)
+        componentRepository.deleteByIdAndSubjectId(subjectId, id)
     }
 
-    private fun ensureSubjectExists(subjectId: UUID) {
-        if (!subjectRepository.existsById(subjectId)) {
+    private fun ensureSubjectExistsAndBelongsToUser(
+        subjectId: UUID,
+        userId: UUID,
+    ) {
+        if (!subjectRepository.existsByIdAndOwnerId(subjectId, userId)) {
             throw SubjectNotFoundException(subjectId)
         }
     }

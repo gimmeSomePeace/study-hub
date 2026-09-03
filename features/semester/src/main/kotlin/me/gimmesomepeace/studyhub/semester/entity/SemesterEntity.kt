@@ -15,6 +15,9 @@ class SemesterEntity(
     @Id
     var id: UUID,
 
+    @Column(name = "owner_id", nullable = false)
+    var ownerId: UUID,
+
     @Column(nullable = false, length = SemesterConstraints.NAME_MAX_LENGTH)
     var name: String,
 

@@ -13,10 +13,12 @@ repositories {
 
 dependencies {
     implementation(project(":features:common"))
+    implementation(project(":features:semester"))
 
     implementation(platform(libs.spring.boot.dependencies))
 
     implementation(libs.spring.web)
+    implementation(libs.spring.security.core)
     implementation(libs.spring.boot.starter.validation)
 
     implementation(libs.spring.data.jpa)
@@ -27,6 +29,8 @@ dependencies {
     testImplementation(libs.spring.boot.starter.webmvc.test)
     testImplementation(libs.spring.mockk)
     testImplementation(libs.mockk)
+
+    testImplementation(libs.spring.security.test)
 
     testRuntimeOnly(libs.junit.platform.launcher)
 }

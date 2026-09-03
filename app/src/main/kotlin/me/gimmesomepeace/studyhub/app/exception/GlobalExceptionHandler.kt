@@ -1,4 +1,4 @@
-package me.gimmesomepeace.studyhub.app
+package me.gimmesomepeace.studyhub.app.exception
 
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus

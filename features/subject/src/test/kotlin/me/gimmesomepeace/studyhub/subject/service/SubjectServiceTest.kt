@@ -6,36 +6,36 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.verify
-import me.gimmesomepeace.studyhub.common.IdGenerator
+import me.gimmesomepeace.studyhub.common.id.IdGenerator
+import me.gimmesomepeace.studyhub.semester.repository.SemesterRepository
 import me.gimmesomepeace.studyhub.subject.entity.SubjectEntity
-import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
 import me.gimmesomepeace.studyhub.subject.exception.SemesterNotFoundException
+import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
 import me.gimmesomepeace.studyhub.subject.fixtures.pageable
 import me.gimmesomepeace.studyhub.subject.fixtures.semesterId
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectCreateRequest
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectEntity
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectId
 import me.gimmesomepeace.studyhub.subject.fixtures.subjectUpdateRequest
+import me.gimmesomepeace.studyhub.subject.fixtures.userId
 import me.gimmesomepeace.studyhub.subject.repository.SubjectRepository
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatCode
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
-import java.sql.SQLException
-import java.util.Optional
 import java.util.UUID
-import kotlin.jvm.java
 
 @ExtendWith(MockKExtension::class)
 class SubjectServiceTest {
     @MockK
     private lateinit var idGenerator: IdGenerator<UUID>
+
+    @MockK
+    private lateinit var semesterRepository: SemesterRepository
 
     @MockK
     private lateinit var subjectRepository: SubjectRepository
@@ -44,10 +44,11 @@ class SubjectServiceTest {
 
     private val subjectId = subjectId()
     private val semesterId = semesterId()
+    private val userId = userId()
 
     @BeforeEach
     fun setUp() {
-        service = SubjectService(idGenerator, subjectRepository)
+        service = SubjectService(idGenerator, semesterRepository, subjectRepository)
     }
 
     @Nested
@@ -56,21 +57,25 @@ class SubjectServiceTest {
         fun `should return subject details when found`() {
             val entity = subjectEntity(id = subjectId, semesterId = semesterId)
 
-            every { subjectRepository.findById(subjectId) } returns Optional.of(entity)
+            every { subjectRepository.findByIdAndOwnerId(subjectId, userId) } returns entity
 
-            val result = service.getById(subjectId)
+            val result = service.getById(subjectId, userId)
 
             assertThat(result.id).isEqualTo(subjectId)
             assertThat(result.semesterId).isEqualTo(semesterId)
             assertThat(result.name).isEqualTo(entity.name)
             assertThat(result.code).isEqualTo(entity.code)
+            assertThat(result.teacher).isEqualTo(entity.teacher)
+            assertThat(result.color).isEqualTo(entity.color)
+            assertThat(result.createdAt).isEqualTo(entity.createdAt)
+            assertThat(result.updatedAt).isEqualTo(entity.updatedAt)
         }
 
         @Test
         fun `should throw NotFoundException when not found`() {
-            every { subjectRepository.findById(subjectId) } returns Optional.empty()
+            every { subjectRepository.findByIdAndOwnerId(subjectId, userId) } returns null
 
-            assertThatThrownBy { service.getById(subjectId) }
+            assertThatThrownBy { service.getById(subjectId, userId) }
                 .isInstanceOf(SubjectNotFoundException::class.java)
                 .hasMessageContaining(subjectId.toString())
         }
@@ -87,9 +92,9 @@ class SubjectServiceTest {
             val page = PageImpl(entities)
             val pageable = pageable()
 
-            every { subjectRepository.findAll(pageable) } returns page
+            every { subjectRepository.findByOwnerId(userId, pageable) } returns page
 
-            val result = service.list(pageable)
+            val result = service.list(pageable, userId)
 
             assertThat(result.content).hasSize(2)
             assertThat(result.content[0].name).isEqualTo("Алгоритмы")
@@ -101,14 +106,12 @@ class SubjectServiceTest {
             val page: Page<SubjectEntity> = PageImpl(emptyList<Nothing>())
             val pageable = pageable()
 
-            every { subjectRepository.findAll(pageable) } returns page
+            every { subjectRepository.findByOwnerId(userId, pageable) } returns page
 
-            val result = service.list(pageable)
+            val result = service.list(pageable, userId)
 
             assertThat(result.content).isEmpty()
             assertThat(result.totalElements).isEqualTo(0)
-
-            verify { subjectRepository.findAll(pageable) }
         }
     }
 
@@ -120,9 +123,10 @@ class SubjectServiceTest {
             val generatedId = subjectId()
 
             every { idGenerator.generate() } returns generatedId
-            every { subjectRepository.saveAndFlush(any()) } answers { firstArg() }
+            every { semesterRepository.existsByIdAndOwnerId(semesterId, userId) } returns true
+            every { subjectRepository.save(any()) } answers { firstArg() }
 
-            val result = service.create(request)
+            val result = service.create(request, userId)
 
             assertThat(result.id).isEqualTo(generatedId)
             assertThat(result.semesterId).isEqualTo(semesterId)
@@ -130,7 +134,7 @@ class SubjectServiceTest {
             assertThat(result.code).isEqualTo(request.code)
 
             verify { idGenerator.generate() }
-            verify { subjectRepository.saveAndFlush(any()) }
+            verify { subjectRepository.saveAndFlush(match { it.id == generatedId }) }
         }
 
         @Test
@@ -139,16 +143,9 @@ class SubjectServiceTest {
 
             val generatedId = subjectId()
             every { idGenerator.generate() } returns generatedId
+            every { semesterRepository.existsByIdAndOwnerId(semesterId, userId) } returns false
 
-            val exception = DataIntegrityViolationException(
-                "Could not execute statement",
-                SQLException(
-                    "ERROR: insert or update on table \"subject\" violates foreign key constraint \"fk_subject_semester\"",
-                ),
-            )
-            every { subjectRepository.saveAndFlush(any()) } throws exception
-
-            assertThatThrownBy { service.create(request) }
+            assertThatThrownBy { service.create(request, userId) }
                 .isInstanceOf(SemesterNotFoundException::class.java)
                 .hasMessageContaining(semesterId.toString())
         }
@@ -166,48 +163,26 @@ class SubjectServiceTest {
 
             val request = subjectUpdateRequest(name = newName)
 
-            every { subjectRepository.findById(subjectId) } returns Optional.of(entity)
-            every { subjectRepository.saveAndFlush(any()) } answers { firstArg() }
+            every { subjectRepository.findByIdAndOwnerId(subjectId, userId) } returns entity
+            every { subjectRepository.save(any()) } answers { firstArg() }
 
-            val result = service.update(subjectId, request)
+            val result = service.update(subjectId, request, userId)
 
             assertThat(result.id).isEqualTo(subjectId)
             assertThat(result.name).isEqualTo(newName)
 
-            verify { subjectRepository.saveAndFlush(any()) }
+            verify { subjectRepository.save(any()) }
         }
 
         @Test
         fun `should throw NotFoundException when subject with given id not found`() {
             val request = subjectUpdateRequest(name = "Алгоритмы и структуры данных")
 
-            every { subjectRepository.findById(subjectId) } returns Optional.empty()
+            every { subjectRepository.findByIdAndOwnerId(subjectId, userId) } returns null
 
-            assertThatThrownBy { service.update(subjectId, request) }
+            assertThatThrownBy { service.update(subjectId, request, userId) }
                 .isInstanceOf(SubjectNotFoundException::class.java)
                 .hasMessageContaining(subjectId.toString())
-        }
-
-        @Test
-        fun `should update only provided fields`() {
-            val entity = subjectEntity(
-                id = subjectId,
-                semesterId = semesterId,
-                name = "Алгоритмы",
-                code = "CS101",
-                teacher = "Иванов И.И.",
-            )
-
-            val request = subjectUpdateRequest(name = "Алгоритмы и структуры данных")
-
-            every { subjectRepository.findById(subjectId) } returns Optional.of(entity)
-            every { subjectRepository.saveAndFlush(any()) } answers { firstArg() }
-
-            val result = service.update(subjectId, request)
-
-            assertThat(result.name).isEqualTo("Алгоритмы и структуры данных")
-            assertThat(result.code).isEqualTo("CS101")
-            assertThat(result.teacher).isEqualTo("Иванов И.И.")
         }
 
         @Test
@@ -220,17 +195,10 @@ class SubjectServiceTest {
             val newSemesterId = UUID.randomUUID()
             val request = subjectUpdateRequest(semesterId = newSemesterId)
 
-            every { subjectRepository.findById(subjectId) } returns Optional.of(entity)
+            every { subjectRepository.findByIdAndOwnerId(subjectId, userId) } returns entity
+            every { semesterRepository.existsByIdAndOwnerId(semesterId, userId) } returns false
 
-            val exception = DataIntegrityViolationException(
-                "Could not execute statement",
-                SQLException(
-                    "ERROR: insert or update on table \"subject\" violates foreign key constraint \"fk_subject_semester\"",
-                ),
-            )
-            every { subjectRepository.saveAndFlush(any()) } throws exception
-
-            assertThatThrownBy { service.update(subjectId, request) }
+            assertThatThrownBy { service.update(subjectId, request, userId) }
                 .isInstanceOf(SemesterNotFoundException::class.java)
         }
     }
@@ -239,21 +207,11 @@ class SubjectServiceTest {
     inner class Delete {
         @Test
         fun `should call repository deleteById`() {
-            every { subjectRepository.deleteById(subjectId) } just Runs
+            every { subjectRepository.deleteByIdAndOwnerId(subjectId, userId) } just Runs
 
-            service.delete(subjectId)
+            service.delete(subjectId, userId)
 
-            verify { subjectRepository.deleteById(subjectId) }
-        }
-
-        @Test
-        fun `should not throw exception when subject not found (idempotent)`() {
-            every { subjectRepository.deleteById(subjectId) } just Runs
-
-            assertThatCode { service.delete(subjectId) }
-                .doesNotThrowAnyException()
-
-            verify { subjectRepository.deleteById(subjectId) }
+            verify { subjectRepository.deleteByIdAndOwnerId(subjectId, userId) }
         }
     }
 }

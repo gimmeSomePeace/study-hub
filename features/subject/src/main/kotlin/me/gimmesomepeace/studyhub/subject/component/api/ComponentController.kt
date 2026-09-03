@@ -1,6 +1,7 @@
 package me.gimmesomepeace.studyhub.subject.component.api
 
 import jakarta.validation.Valid
+import me.gimmesomepeace.studyhub.common.user.UserPrincipal
 import me.gimmesomepeace.studyhub.subject.component.api.create.ComponentCreateRequest
 import me.gimmesomepeace.studyhub.subject.component.api.update.ComponentUpdateRequest
 import me.gimmesomepeace.studyhub.subject.component.dto.ComponentDetails
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -31,26 +33,29 @@ class ComponentController(
 ) {
     @GetMapping("/{id}")
     fun get(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable subjectId: UUID,
         @PathVariable id: UUID,
     ): ResponseEntity<ComponentDetails> {
-        val component = service.getById(subjectId, id)
+        val component = service.getById(subjectId, id, userPrincipal.userId)
         return ResponseEntity.ok(component)
     }
 
     @GetMapping
     fun list(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable subjectId: UUID,
         @PageableDefault(size = 20, sort = ["createdAt"], direction = Sort.Direction.DESC)
         pageable: Pageable,
-    ): Page<ComponentListItem> = service.list(subjectId, pageable)
+    ): Page<ComponentListItem> = service.list(subjectId, pageable, userPrincipal.userId)
 
     @PostMapping
     fun create(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable subjectId: UUID,
         @Valid @RequestBody request: ComponentCreateRequest,
     ): ResponseEntity<ComponentDetails> {
-        val createdComponent = service.create(subjectId, request)
+        val createdComponent = service.create(subjectId, request, userPrincipal.userId)
         return ResponseEntity
             .created(URI("/subjects/$subjectId/components/${createdComponent.id}"))
             .body(createdComponent)
@@ -58,20 +63,22 @@ class ComponentController(
 
     @PatchMapping("/{id}")
     fun update(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable subjectId: UUID,
         @PathVariable id: UUID,
         @Valid @RequestBody request: ComponentUpdateRequest,
     ): ResponseEntity<ComponentDetails> {
-        val updatedComponent = service.update(subjectId, id, request)
+        val updatedComponent = service.update(subjectId, id, request, userPrincipal.userId)
         return ResponseEntity.ok(updatedComponent)
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun delete(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable subjectId: UUID,
         @PathVariable id: UUID,
     ) {
-        service.delete(subjectId, id)
+        service.delete(subjectId, id, userPrincipal.userId)
     }
 }

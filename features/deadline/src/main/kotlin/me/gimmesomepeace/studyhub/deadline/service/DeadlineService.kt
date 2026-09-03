@@ -1,7 +1,6 @@
 package me.gimmesomepeace.studyhub.deadline.service
 
-import jakarta.validation.ValidationException
-import me.gimmesomepeace.studyhub.common.IdGenerator
+import me.gimmesomepeace.studyhub.common.id.IdGenerator
 import me.gimmesomepeace.studyhub.deadline.api.create.DeadlineCreateRequest
 import me.gimmesomepeace.studyhub.deadline.api.update.DeadlineUpdateRequest
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineDetails
@@ -34,19 +33,31 @@ class DeadlineService(
     private val statusTransitions: DeadlineStatusTransitions,
 ) {
     @Transactional(readOnly = true)
-    fun getById(id: UUID): DeadlineDetails = deadlineRepository
-        .findById(id)
-        .orElseThrow { DeadlineNotFoundException(id) }
-        .toDetails()
+    fun getById(
+        id: UUID,
+        userId: UUID,
+    ): DeadlineDetails = deadlineRepository
+        .findByIdAndOwnerId(id, userId)
+        ?.toDetails()
+        ?: throw DeadlineNotFoundException(id)
 
     @Transactional(readOnly = true)
-    fun list(pageable: Pageable): Page<DeadlineListItem> {
-        val page = deadlineRepository.findAll(pageable)
+    fun list(
+        pageable: Pageable,
+        userId: UUID,
+    ): Page<DeadlineListItem> {
+        val page = deadlineRepository.findByOwnerId(userId, pageable)
         return page.map { it.toListItem() }
     }
 
-    fun create(request: DeadlineCreateRequest): DeadlineDetails {
-        ensureReferences(request.subjectId, request.componentId)
+    fun create(
+        request: DeadlineCreateRequest,
+        userId: UUID,
+    ): DeadlineDetails {
+        ensureSubjectExistsAndBelongsToOwner(userId, request.subjectId)
+        if (request.componentId != null) {
+            ensureComponentExistsAndBelongsToSubject(request.componentId, request.subjectId)
+        }
 
         val deadline = DeadlineEntity(
             id = idGenerator.generate(),
@@ -65,14 +76,20 @@ class DeadlineService(
     fun update(
         id: UUID,
         request: DeadlineUpdateRequest,
+        userId: UUID,
     ): DeadlineDetails {
         val deadline = deadlineRepository
             .findById(id)
             .orElseThrow { DeadlineNotFoundException(id) }
 
-        if (request.subjectId != null) deadline.subjectId = request.subjectId
-        if (request.componentId != null) deadline.componentId = request.componentId
-        ensureReferences(deadline.subjectId, request.componentId)
+        if (request.subjectId != null) {
+            ensureSubjectExistsAndBelongsToOwner(userId, request.subjectId)
+            deadline.subjectId = request.subjectId
+        }
+        if (request.componentId != null) {
+            ensureComponentExistsAndBelongsToSubject(userId, request.componentId)
+            deadline.componentId = request.componentId
+        }
 
         if (request.title != null) deadline.title = request.title
         if (request.dueAt != null) deadline.dueAt = request.dueAt
@@ -85,19 +102,29 @@ class DeadlineService(
         return deadline.toDetails()
     }
 
-    fun closeDeadline(id: UUID): DeadlineDetails = updateDeadlineStatus(id, DeadlineStatus.CLOSED)
+    fun closeDeadline(
+        id: UUID,
+        userId: UUID,
+    ): DeadlineDetails = updateDeadlineStatus(id, DeadlineStatus.CLOSED, userId)
 
-    fun reopenDeadline(id: UUID): DeadlineDetails = updateDeadlineStatus(id, DeadlineStatus.OPEN)
+    fun reopenDeadline(
+        id: UUID,
+        userId: UUID,
+    ): DeadlineDetails = updateDeadlineStatus(id, DeadlineStatus.OPEN, userId)
 
-    fun cancelDeadline(id: UUID): DeadlineDetails = updateDeadlineStatus(id, DeadlineStatus.CANCELLED)
+    fun cancelDeadline(
+        id: UUID,
+        userId: UUID,
+    ): DeadlineDetails = updateDeadlineStatus(id, DeadlineStatus.CANCELLED, userId)
 
     private fun updateDeadlineStatus(
         id: UUID,
         newStatus: DeadlineStatus,
+        userId: UUID,
     ): DeadlineDetails {
         val deadline = deadlineRepository
-            .findById(id)
-            .orElseThrow { DeadlineNotFoundException(id) }
+            .findByIdAndOwnerId(id, userId)
+            ?: throw DeadlineNotFoundException(id)
 
         if (deadline.status == newStatus) return deadline.toDetails()
 
@@ -109,28 +136,28 @@ class DeadlineService(
         return deadlineRepository.save(deadline).toDetails()
     }
 
-    fun delete(id: UUID) {
-        deadlineRepository.deleteById(id)
+    fun delete(
+        id: UUID,
+        userId: UUID,
+    ) {
+        deadlineRepository.deleteByIdAndOwnerId(id, userId)
     }
 
-    private fun ensureReferences(
+    private fun ensureSubjectExistsAndBelongsToOwner(
+        userId: UUID,
         subjectId: UUID,
-        componentId: UUID?,
     ) {
-        if (!subjectRepository.existsById(subjectId)) {
+        if (!subjectRepository.existsByIdAndOwnerId(subjectId, userId)) {
             throw SubjectNotFoundException(subjectId)
         }
+    }
 
-        if (componentId != null) {
-            val component = componentRepository
-                .findById(componentId)
-                .orElseThrow { ComponentNotFoundException(componentId) }
-
-            if (component.subjectId != subjectId) {
-                throw ValidationException(
-                    "Component with id '$componentId' does not belong to subject with id '$subjectId'",
-                )
-            }
+    private fun ensureComponentExistsAndBelongsToSubject(
+        componentId: UUID,
+        subjectId: UUID,
+    ) {
+        if (!componentRepository.existsByIdAndSubjectId(componentId, subjectId)) {
+            throw ComponentNotFoundException(componentId)
         }
     }
 }

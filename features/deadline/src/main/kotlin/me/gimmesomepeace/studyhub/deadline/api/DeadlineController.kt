@@ -1,6 +1,7 @@
 package me.gimmesomepeace.studyhub.deadline.api
 
 import jakarta.validation.Valid
+import me.gimmesomepeace.studyhub.common.user.UserPrincipal
 import me.gimmesomepeace.studyhub.deadline.api.create.DeadlineCreateRequest
 import me.gimmesomepeace.studyhub.deadline.api.update.DeadlineUpdateRequest
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineDetails
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -31,23 +33,26 @@ class DeadlineController(
 ) {
     @GetMapping("/{id}")
     fun get(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable id: UUID,
     ): ResponseEntity<DeadlineDetails> {
-        val deadline = service.getById(id)
+        val deadline = service.getById(id, userPrincipal.userId)
         return ResponseEntity.ok(deadline)
     }
 
     @GetMapping
     fun list(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PageableDefault(size = 20, sort = ["dueAt"], direction = Sort.Direction.ASC)
         pageable: Pageable,
-    ): Page<DeadlineListItem> = service.list(pageable = pageable)
+    ): Page<DeadlineListItem> = service.list(pageable = pageable, userPrincipal.userId)
 
     @PostMapping
     fun create(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @Valid @RequestBody request: DeadlineCreateRequest,
     ): ResponseEntity<DeadlineDetails> {
-        val createdDeadline = service.create(request)
+        val createdDeadline = service.create(request, userPrincipal.userId)
         return ResponseEntity
             .created(URI("/deadlines/${createdDeadline.id}"))
             .body(createdDeadline)
@@ -55,42 +60,47 @@ class DeadlineController(
 
     @PatchMapping("/{id}")
     fun update(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable id: UUID,
         @Valid @RequestBody request: DeadlineUpdateRequest,
     ): ResponseEntity<DeadlineDetails> {
-        val updatedDeadline = service.update(id, request)
+        val updatedDeadline = service.update(id, request, userPrincipal.userId)
         return ResponseEntity.ok(updatedDeadline)
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun delete(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable id: UUID,
     ) {
-        service.delete(id)
+        service.delete(id, userPrincipal.userId)
     }
 
     @PostMapping("/{id}/close")
     fun close(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable id: UUID,
     ): ResponseEntity<DeadlineDetails> {
-        val updatedDeadline = service.closeDeadline(id)
+        val updatedDeadline = service.closeDeadline(id, userPrincipal.userId)
         return ResponseEntity.ok(updatedDeadline)
     }
 
     @PostMapping("/{id}/cancel")
     fun cancel(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable id: UUID,
     ): ResponseEntity<DeadlineDetails> {
-        val updatedDeadline = service.cancelDeadline(id)
+        val updatedDeadline = service.cancelDeadline(id, userPrincipal.userId)
         return ResponseEntity.ok(updatedDeadline)
     }
 
     @PostMapping("/{id}/reopen")
     fun reopen(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable id: UUID,
     ): ResponseEntity<DeadlineDetails> {
-        val updatedDeadline = service.reopenDeadline(id)
+        val updatedDeadline = service.reopenDeadline(id, userPrincipal.userId)
         return ResponseEntity.ok(updatedDeadline)
     }
 }

@@ -8,10 +8,12 @@ import io.mockk.verify
 import me.gimmesomepeace.studyhub.semester.api.create.SemesterCreateRequest
 import me.gimmesomepeace.studyhub.semester.api.update.SemesterUpdateRequest
 import me.gimmesomepeace.studyhub.semester.dto.SemesterListItem
-import me.gimmesomepeace.studyhub.semester.dto.semesterDetails
-import me.gimmesomepeace.studyhub.semester.dto.semesterId
-import me.gimmesomepeace.studyhub.semester.dto.semesterListItem
 import me.gimmesomepeace.studyhub.semester.exception.SemesterNotFoundException
+import me.gimmesomepeace.studyhub.semester.fixtures.authenticateAs
+import me.gimmesomepeace.studyhub.semester.fixtures.semesterDetails
+import me.gimmesomepeace.studyhub.semester.fixtures.semesterId
+import me.gimmesomepeace.studyhub.semester.fixtures.semesterListItem
+import me.gimmesomepeace.studyhub.semester.fixtures.userId
 import me.gimmesomepeace.studyhub.semester.service.SemesterService
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -43,6 +45,7 @@ class SemesterControllerTest {
     private lateinit var service: SemesterService
 
     private val semesterId = semesterId()
+    private val userId = userId()
 
     @Nested
     inner class GetById {
@@ -50,11 +53,12 @@ class SemesterControllerTest {
         fun `should return semester when found`() {
             val details = semesterDetails(id = semesterId)
 
-            every { service.getById(semesterId) } returns details
+            every { service.getById(semesterId, userId) } returns details
 
             mvc
                 .get("/semesters/{id}", semesterId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -69,11 +73,12 @@ class SemesterControllerTest {
 
         @Test
         fun `should return 404 when semester not found`() {
-            every { service.getById(semesterId) } throws SemesterNotFoundException(semesterId)
+            every { service.getById(semesterId, userId) } throws SemesterNotFoundException(semesterId)
 
             mvc
                 .get("/semesters/{id}", semesterId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SEMESTER_NOT_FOUND") }
@@ -91,11 +96,12 @@ class SemesterControllerTest {
             )
             val page: Page<SemesterListItem> = PageImpl(items)
 
-            every { service.list(any<Pageable>()) } returns page
+            every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
                 .get("/semesters") {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -111,11 +117,12 @@ class SemesterControllerTest {
         fun `should return empty page when no semesters`() {
             val page: Page<SemesterListItem> = PageImpl(emptyList())
 
-            every { service.list(any<Pageable>()) } returns page
+            every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
                 .get("/semesters") {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     jsonPath("$.content") { isArray() }
@@ -142,12 +149,13 @@ class SemesterControllerTest {
                 endsAt = request.endsAt,
             )
 
-            every { service.create(request) } returns created
+            every { service.create(request, userId) } returns created
 
             mvc
                 .post("/semesters") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isCreated() }
                     header { string("Location", "/semesters/$semesterId") }
@@ -161,7 +169,7 @@ class SemesterControllerTest {
 
         @ParameterizedTest
         @MethodSource(
-            "me.gimmesomepeace.studyhub.semester.api.SemesterTestData#invalidCreateSemesterRequests",
+            "me.gimmesomepeace.studyhub.semester.fixtures.SemesterTestData#invalidCreateSemesterRequests",
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
@@ -185,12 +193,13 @@ class SemesterControllerTest {
                 name = "Осень 2026/2027",
             )
 
-            every { service.update(semesterId, request) } returns updated
+            every { service.update(semesterId, request, userId) } returns updated
 
             mvc
                 .patch("/semesters/{id}", semesterId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -203,12 +212,13 @@ class SemesterControllerTest {
         fun `should return 404 when semester not found`() {
             val request = SemesterUpdateRequest(name = "Осень 2026/2027")
 
-            every { service.update(semesterId, request) } throws SemesterNotFoundException(semesterId)
+            every { service.update(semesterId, request, userId) } throws SemesterNotFoundException(semesterId)
 
             mvc
                 .patch("/semesters/{id}", semesterId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SEMESTER_NOT_FOUND") }
@@ -217,7 +227,7 @@ class SemesterControllerTest {
 
         @ParameterizedTest
         @MethodSource(
-            "me.gimmesomepeace.studyhub.semester.api.SemesterTestData#invalidUpdateSemesterRequests",
+            "me.gimmesomepeace.studyhub.semester.fixtures.SemesterTestData#invalidUpdateSemesterRequests",
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
@@ -234,15 +244,16 @@ class SemesterControllerTest {
     inner class Delete {
         @Test
         fun `should delete semester and return 204`() {
-            every { service.delete(semesterId) } just Runs
+            every { service.delete(semesterId, userId) } just Runs
 
             mvc
-                .delete("/semesters/{id}", semesterId)
-                .andExpect {
+                .delete("/semesters/{id}", semesterId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isNoContent() }
                 }
 
-            verify { service.delete(semesterId) }
+            verify { service.delete(semesterId, userId) }
         }
     }
 }

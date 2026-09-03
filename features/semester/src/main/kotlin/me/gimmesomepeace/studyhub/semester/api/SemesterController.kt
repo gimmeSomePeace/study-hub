@@ -1,6 +1,7 @@
 package me.gimmesomepeace.studyhub.semester.api
 
 import jakarta.validation.Valid
+import me.gimmesomepeace.studyhub.common.user.UserPrincipal
 import me.gimmesomepeace.studyhub.semester.api.create.SemesterCreateRequest
 import me.gimmesomepeace.studyhub.semester.api.update.SemesterUpdateRequest
 import me.gimmesomepeace.studyhub.semester.dto.SemesterDetails
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -31,39 +33,44 @@ class SemesterController(
 ) {
     @GetMapping("/{id}")
     fun get(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable id: UUID,
     ): ResponseEntity<SemesterDetails> {
-        val semester = service.getById(id)
+        val semester = service.getById(id, userPrincipal.userId)
         return ResponseEntity.ok(semester)
     }
 
     @GetMapping
     fun list(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PageableDefault(size = 20, sort = ["createdAt"], direction = Sort.Direction.DESC) pageable: Pageable,
-    ): Page<SemesterListItem> = service.list(pageable)
+    ): Page<SemesterListItem> = service.list(pageable, userPrincipal.userId)
 
     @PostMapping
     fun create(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @Valid @RequestBody request: SemesterCreateRequest,
     ): ResponseEntity<SemesterDetails> {
-        val createdSemester = service.create(request)
+        val createdSemester = service.create(request, userPrincipal.userId)
         return ResponseEntity.created(URI("/semesters/${createdSemester.id}")).body(createdSemester)
     }
 
     @PatchMapping("/{id}")
     fun update(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable id: UUID,
         @Valid @RequestBody request: SemesterUpdateRequest,
     ): ResponseEntity<SemesterDetails> {
-        val updatedSemester = service.update(id, request)
+        val updatedSemester = service.update(id, request, userPrincipal.userId)
         return ResponseEntity.ok(updatedSemester)
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun delete(
+        @AuthenticationPrincipal userPrincipal: UserPrincipal,
         @PathVariable id: UUID,
     ) {
-        service.delete(id)
+        service.delete(id, userPrincipal.userId)
     }
 }

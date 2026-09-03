@@ -1,6 +1,6 @@
 package me.gimmesomepeace.studyhub.semester.service
 
-import me.gimmesomepeace.studyhub.common.IdGenerator
+import me.gimmesomepeace.studyhub.common.id.IdGenerator
 import me.gimmesomepeace.studyhub.semester.api.create.SemesterCreateRequest
 import me.gimmesomepeace.studyhub.semester.api.toDetails
 import me.gimmesomepeace.studyhub.semester.api.toListItem
@@ -23,19 +23,31 @@ class SemesterService(
     private val semesterRepository: SemesterRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getById(id: UUID): SemesterDetails =
-        semesterRepository.findById(id).orElseThrow { SemesterNotFoundException(id) }.toDetails()
+    fun getById(
+        id: UUID,
+        userId: UUID,
+    ): SemesterDetails = semesterRepository
+        .findByIdAndOwnerId(id, userId)
+        ?.toDetails()
+        ?: throw SemesterNotFoundException(id)
 
     @Transactional(readOnly = true)
-    fun list(pageable: Pageable): Page<SemesterListItem> = semesterRepository.findAll(pageable).map { it.toListItem() }
+    fun list(
+        pageable: Pageable,
+        userId: UUID,
+    ): Page<SemesterListItem> = semesterRepository.findByOwnerId(userId, pageable).map { it.toListItem() }
 
     @Transactional
-    fun create(request: SemesterCreateRequest): SemesterDetails {
+    fun create(
+        request: SemesterCreateRequest,
+        userId: UUID,
+    ): SemesterDetails {
         if (!request.endsAt.isAfter(request.startsAt)) {
             throw SemesterValidationException("End date must be after start date")
         }
         val semester = SemesterEntity(
             id = idGenerator.generate(),
+            ownerId = userId,
             name = request.name,
             startsAt = request.startsAt,
             endsAt = request.endsAt,
@@ -49,8 +61,11 @@ class SemesterService(
     fun update(
         id: UUID,
         request: SemesterUpdateRequest,
+        userId: UUID,
     ): SemesterDetails {
-        val semester = semesterRepository.findById(id).orElseThrow { SemesterNotFoundException(id) }
+        val semester = semesterRepository
+            .findByIdAndOwnerId(id, userId)
+            ?: throw SemesterNotFoundException(userId)
 
         if (request.startsAt != null) semester.startsAt = request.startsAt
         if (request.endsAt != null) semester.endsAt = request.endsAt
@@ -65,7 +80,10 @@ class SemesterService(
     }
 
     @Transactional
-    fun delete(id: UUID) {
-        semesterRepository.deleteById(id)
+    fun delete(
+        id: UUID,
+        userId: UUID,
+    ) {
+        semesterRepository.deleteByIdAndOwnerId(id, userId)
     }
 }
