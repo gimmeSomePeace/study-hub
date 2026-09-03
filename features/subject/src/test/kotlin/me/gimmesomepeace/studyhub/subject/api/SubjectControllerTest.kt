@@ -5,6 +5,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.verify
+import me.gimmesomepeace.studyhub.subject.TestSecurityConfig
 import me.gimmesomepeace.studyhub.subject.dto.SubjectListItem
 import me.gimmesomepeace.studyhub.subject.exception.SemesterNotFoundException
 import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
@@ -23,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
+import org.springframework.context.annotation.Import
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -36,6 +38,7 @@ import tools.jackson.databind.ObjectMapper
 import java.util.UUID
 
 @WebMvcTest(SubjectController::class)
+@Import(TestSecurityConfig::class)
 class SubjectControllerTest {
     @Autowired
     private lateinit var mvc: MockMvc
@@ -59,7 +62,7 @@ class SubjectControllerTest {
             every { service.getById(subjectId, userId) } returns details
 
             mvc
-                .get("/subjects/{id}", subjectId) {
+                .get("/subjects/$subjectId") {
                     accept = MediaType.APPLICATION_JSON
                     with(authenticateAs(userId))
                 }.andExpect {

@@ -134,7 +134,7 @@ class SubjectServiceTest {
             assertThat(result.code).isEqualTo(request.code)
 
             verify { idGenerator.generate() }
-            verify { subjectRepository.saveAndFlush(match { it.id == generatedId }) }
+            verify { subjectRepository.save(match { it.id == generatedId }) }
         }
 
         @Test
@@ -196,7 +196,7 @@ class SubjectServiceTest {
             val request = subjectUpdateRequest(semesterId = newSemesterId)
 
             every { subjectRepository.findByIdAndOwnerId(subjectId, userId) } returns entity
-            every { semesterRepository.existsByIdAndOwnerId(semesterId, userId) } returns false
+            every { semesterRepository.existsByIdAndOwnerId(newSemesterId, userId) } returns false
 
             assertThatThrownBy { service.update(subjectId, request, userId) }
                 .isInstanceOf(SemesterNotFoundException::class.java)

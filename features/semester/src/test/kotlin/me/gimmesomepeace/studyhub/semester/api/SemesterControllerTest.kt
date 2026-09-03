@@ -5,6 +5,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.verify
+import me.gimmesomepeace.studyhub.semester.TestSecurityConfig
 import me.gimmesomepeace.studyhub.semester.api.create.SemesterCreateRequest
 import me.gimmesomepeace.studyhub.semester.api.update.SemesterUpdateRequest
 import me.gimmesomepeace.studyhub.semester.dto.SemesterListItem
@@ -21,6 +22,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
+import org.springframework.context.annotation.Import
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -34,6 +36,7 @@ import tools.jackson.databind.ObjectMapper
 import java.time.LocalDate
 
 @WebMvcTest(SemesterController::class)
+@Import(TestSecurityConfig::class)
 class SemesterControllerTest {
     @Autowired
     private lateinit var mvc: MockMvc

@@ -191,7 +191,7 @@ class DeadlineServiceTest {
             )
 
             every { subjectRepository.existsByIdAndOwnerId(subjectId, userId) } returns true
-            every { componentRepository.existsByIdAndSubjectId(componentId, userId()) } returns false
+            every { componentRepository.existsByIdAndSubjectId(componentId, subjectId) } returns false
 
             assertThatThrownBy { service.create(request, userId) }
                 .isInstanceOf(ComponentNotFoundException::class.java)

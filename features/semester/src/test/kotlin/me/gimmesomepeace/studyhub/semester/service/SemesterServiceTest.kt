@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.domain.PageImpl
 import java.time.LocalDate
-import java.util.Optional
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -166,7 +165,7 @@ class SemesterServiceTest {
 
             val request = semesterUpdateRequest(name = "Осень 2026/2027")
 
-            every { semesterRepository.findById(semesterId) } returns Optional.of(entity)
+            every { semesterRepository.findByIdAndOwnerId(semesterId, userId) } returns entity
             every { semesterRepository.save(any()) } answers { firstArg() }
 
             val result = service.update(semesterId, request, userId)

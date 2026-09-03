@@ -5,11 +5,13 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.verify
+import me.gimmesomepeace.studyhub.deadline.TestSecurityConfig
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineListItem
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineStatus
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineType
 import me.gimmesomepeace.studyhub.deadline.exception.DeadlineNotFoundException
 import me.gimmesomepeace.studyhub.deadline.exception.InvalidStatusTransitionException
+import me.gimmesomepeace.studyhub.deadline.fixtures.authenticateAs
 import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineComponentId
 import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineCreateRequest
 import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineDetails
@@ -17,6 +19,7 @@ import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineId
 import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineListItem
 import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineSubjectId
 import me.gimmesomepeace.studyhub.deadline.fixtures.deadlineUpdateRequest
+import me.gimmesomepeace.studyhub.deadline.fixtures.userId
 import me.gimmesomepeace.studyhub.deadline.service.DeadlineService
 import me.gimmesomepeace.studyhub.subject.component.exception.ComponentNotFoundException
 import me.gimmesomepeace.studyhub.subject.exception.SubjectNotFoundException
@@ -26,6 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
+import org.springframework.context.annotation.Import
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -38,6 +42,7 @@ import org.springframework.test.web.servlet.post
 import tools.jackson.databind.ObjectMapper
 
 @WebMvcTest(DeadlineController::class)
+@Import(TestSecurityConfig::class)
 class DeadlineControllerTest {
     @Autowired
     private lateinit var mvc: MockMvc
@@ -50,6 +55,7 @@ class DeadlineControllerTest {
 
     private val deadlineId = deadlineId()
     private val subjectId = deadlineSubjectId()
+    private val userId = userId()
 
     @Nested
     inner class GetById {
@@ -64,11 +70,12 @@ class DeadlineControllerTest {
                 notes = "Сдать через LMS",
             )
 
-            every { service.getById(deadlineId) } returns details
+            every { service.getById(deadlineId, userId) } returns details
 
             mvc
                 .get("/deadlines/{id}", deadlineId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -86,11 +93,12 @@ class DeadlineControllerTest {
 
         @Test
         fun `should return 404 when deadline not found`() {
-            every { service.getById(deadlineId) } throws DeadlineNotFoundException(deadlineId)
+            every { service.getById(deadlineId, userId) } throws DeadlineNotFoundException(deadlineId)
 
             mvc
                 .get("/deadlines/{id}", deadlineId) {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("DEADLINE_NOT_FOUND") }
@@ -108,11 +116,12 @@ class DeadlineControllerTest {
             )
             val page: Page<DeadlineListItem> = PageImpl(items)
 
-            every { service.list(any<Pageable>()) } returns page
+            every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
                 .get("/deadlines") {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -128,11 +137,12 @@ class DeadlineControllerTest {
         fun `should return empty page when no deadlines`() {
             val page: Page<DeadlineListItem> = PageImpl(emptyList())
 
-            every { service.list(any<Pageable>()) } returns page
+            every { service.list(any<Pageable>(), userId) } returns page
 
             mvc
                 .get("/deadlines") {
                     accept = MediaType.APPLICATION_JSON
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     jsonPath("$.content") { isArray() }
@@ -159,12 +169,13 @@ class DeadlineControllerTest {
                 status = DeadlineStatus.OPEN,
             )
 
-            every { service.create(request) } returns created
+            every { service.create(request, userId) } returns created
 
             mvc
                 .post("/deadlines") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isCreated() }
                     header { string("Location", "/deadlines/$deadlineId") }
@@ -176,19 +187,20 @@ class DeadlineControllerTest {
                     jsonPath("$.status") { exists() }
                 }
 
-            verify { service.create(request) }
+            verify { service.create(request, userId) }
         }
 
         @Test
         fun `should return 404 when subject not found`() {
             val request = deadlineCreateRequest(subjectId = subjectId)
 
-            every { service.create(request) } throws SubjectNotFoundException(subjectId)
+            every { service.create(request, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
                 .post("/deadlines") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SUBJECT_NOT_FOUND") }
@@ -200,18 +212,19 @@ class DeadlineControllerTest {
             val componentId = deadlineComponentId()
             val request = deadlineCreateRequest(subjectId = subjectId, componentId = componentId)
 
-            every { service.create(request) } throws ComponentNotFoundException(componentId)
+            every { service.create(request, userId) } throws ComponentNotFoundException(componentId)
 
             mvc
                 .post("/deadlines") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("COMPONENT_NOT_FOUND") }
                 }
 
-            verify { service.create(request) }
+            verify { service.create(request, userId) }
         }
 
         @ParameterizedTest
@@ -242,12 +255,13 @@ class DeadlineControllerTest {
                 title = newTitle,
             )
 
-            every { service.update(deadlineId, request) } returns updated
+            every { service.update(deadlineId, request, userId) } returns updated
 
             mvc
                 .patch("/deadlines/{id}", deadlineId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
@@ -255,25 +269,24 @@ class DeadlineControllerTest {
                     jsonPath("$.title") { value(request.title) }
                 }
 
-            verify { service.update(deadlineId, request) }
+            verify { service.update(deadlineId, request, userId) }
         }
 
         @Test
         fun `should return 404 when deadline not found`() {
             val request = deadlineUpdateRequest(title = "Лабораторная работа 1: Обновлённое название")
 
-            every { service.update(deadlineId, request) } throws DeadlineNotFoundException(deadlineId)
+            every { service.update(deadlineId, request, userId) } throws DeadlineNotFoundException(deadlineId)
 
             mvc
                 .patch("/deadlines/{id}", deadlineId) {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
+                    with(authenticateAs(userId))
                 }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("DEADLINE_NOT_FOUND") }
                 }
-
-            verify { service.update(deadlineId, request) }
         }
 
         @ParameterizedTest
@@ -295,15 +308,16 @@ class DeadlineControllerTest {
     inner class Delete {
         @Test
         fun `should delete deadline and return 204`() {
-            every { service.delete(deadlineId) } just Runs
+            every { service.delete(deadlineId, userId) } just Runs
 
             mvc
-                .delete("/deadlines/{id}", deadlineId)
-                .andExpect {
+                .delete("/deadlines/{id}", deadlineId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isNoContent() }
                 }
 
-            verify { service.delete(deadlineId) }
+            verify { service.delete(deadlineId, userId) }
         }
     }
 
@@ -316,44 +330,47 @@ class DeadlineControllerTest {
                 status = DeadlineStatus.CLOSED,
             )
 
-            every { service.closeDeadline(deadlineId) } returns updated
+            every { service.closeDeadline(deadlineId, userId) } returns updated
 
             mvc
-                .post("/deadlines/{id}/close", deadlineId)
-                .andExpect {
+                .post("/deadlines/{id}/close", deadlineId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
                     jsonPath("$.id") { value(deadlineId.toString()) }
                     jsonPath("$.status") { value("CLOSED") }
                 }
 
-            verify { service.closeDeadline(deadlineId) }
+            verify { service.closeDeadline(deadlineId, userId) }
         }
 
         @Test
         fun `should return 404 when deadline not found`() {
-            every { service.closeDeadline(deadlineId) } throws DeadlineNotFoundException(deadlineId)
+            every { service.closeDeadline(deadlineId, userId) } throws DeadlineNotFoundException(deadlineId)
 
             mvc
-                .post("/deadlines/{id}/close", deadlineId)
-                .andExpect {
+                .post("/deadlines/{id}/close", deadlineId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("DEADLINE_NOT_FOUND") }
                 }
 
-            verify { service.closeDeadline(deadlineId) }
+            verify { service.closeDeadline(deadlineId, userId) }
         }
 
         @Test
         fun `should return 409 when transition not allowed`() {
-            every { service.closeDeadline(deadlineId) } throws InvalidStatusTransitionException(
+            every { service.closeDeadline(deadlineId, userId) } throws InvalidStatusTransitionException(
                 DeadlineStatus.CANCELLED,
                 DeadlineStatus.CLOSED,
             )
 
             mvc
-                .post("/deadlines/{id}/close", deadlineId)
-                .andExpect {
+                .post("/deadlines/{id}/close", deadlineId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isConflict() }
                     jsonPath("$.code") { value("INVALID_STATUS_TRANSITION") }
                 }
@@ -369,49 +386,52 @@ class DeadlineControllerTest {
                 status = DeadlineStatus.CANCELLED,
             )
 
-            every { service.cancelDeadline(deadlineId) } returns updated
+            every { service.cancelDeadline(deadlineId, userId) } returns updated
 
             mvc
-                .post("/deadlines/{id}/cancel", deadlineId)
-                .andExpect {
+                .post("/deadlines/{id}/cancel", deadlineId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
                     jsonPath("$.id") { value(deadlineId.toString()) }
                     jsonPath("$.status") { value("CANCELLED") }
                 }
 
-            verify { service.cancelDeadline(deadlineId) }
+            verify { service.cancelDeadline(deadlineId, userId) }
         }
 
         @Test
         fun `should return 404 when deadline not found`() {
-            every { service.cancelDeadline(deadlineId) } throws DeadlineNotFoundException(deadlineId)
+            every { service.cancelDeadline(deadlineId, userId) } throws DeadlineNotFoundException(deadlineId)
 
             mvc
-                .post("/deadlines/{id}/cancel", deadlineId)
-                .andExpect {
+                .post("/deadlines/{id}/cancel", deadlineId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("DEADLINE_NOT_FOUND") }
                 }
 
-            verify { service.cancelDeadline(deadlineId) }
+            verify { service.cancelDeadline(deadlineId, userId) }
         }
 
         @Test
         fun `should return 409 when transition not allowed`() {
-            every { service.cancelDeadline(deadlineId) } throws InvalidStatusTransitionException(
+            every { service.cancelDeadline(deadlineId, userId) } throws InvalidStatusTransitionException(
                 DeadlineStatus.CLOSED,
                 DeadlineStatus.CANCELLED,
             )
 
             mvc
-                .post("/deadlines/{id}/cancel", deadlineId)
-                .andExpect {
+                .post("/deadlines/{id}/cancel", deadlineId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isConflict() }
                     jsonPath("$.code") { value("INVALID_STATUS_TRANSITION") }
                 }
 
-            verify { service.cancelDeadline(deadlineId) }
+            verify { service.cancelDeadline(deadlineId, userId) }
         }
     }
 
@@ -424,49 +444,52 @@ class DeadlineControllerTest {
                 status = DeadlineStatus.OPEN,
             )
 
-            every { service.reopenDeadline(deadlineId) } returns updated
+            every { service.reopenDeadline(deadlineId, userId) } returns updated
 
             mvc
-                .post("/deadlines/{id}/reopen", deadlineId)
-                .andExpect {
+                .post("/deadlines/{id}/reopen", deadlineId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
                     jsonPath("$.id") { value(deadlineId.toString()) }
                     jsonPath("$.status") { value("OPEN") }
                 }
 
-            verify { service.reopenDeadline(deadlineId) }
+            verify { service.reopenDeadline(deadlineId, userId) }
         }
 
         @Test
         fun `should return 404 when deadline not found`() {
-            every { service.reopenDeadline(deadlineId) } throws DeadlineNotFoundException(deadlineId)
+            every { service.reopenDeadline(deadlineId, userId) } throws DeadlineNotFoundException(deadlineId)
 
             mvc
-                .post("/deadlines/{id}/reopen", deadlineId)
-                .andExpect {
+                .post("/deadlines/{id}/reopen", deadlineId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("DEADLINE_NOT_FOUND") }
                 }
 
-            verify { service.reopenDeadline(deadlineId) }
+            verify { service.reopenDeadline(deadlineId, userId) }
         }
 
         @Test
         fun `should return 409 when transition not allowed`() {
-            every { service.reopenDeadline(deadlineId) } throws InvalidStatusTransitionException(
+            every { service.reopenDeadline(deadlineId, userId) } throws InvalidStatusTransitionException(
                 DeadlineStatus.CANCELLED,
                 DeadlineStatus.OPEN,
             )
 
             mvc
-                .post("/deadlines/{id}/reopen", deadlineId)
-                .andExpect {
+                .post("/deadlines/{id}/reopen", deadlineId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isConflict() }
                     jsonPath("$.code") { value("INVALID_STATUS_TRANSITION") }
                 }
 
-            verify { service.reopenDeadline(deadlineId) }
+            verify { service.reopenDeadline(deadlineId, userId) }
         }
     }
 }

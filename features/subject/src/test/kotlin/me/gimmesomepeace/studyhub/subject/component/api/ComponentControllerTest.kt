@@ -5,9 +5,9 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.verify
+import me.gimmesomepeace.studyhub.subject.TestSecurityConfig
 import me.gimmesomepeace.studyhub.subject.component.dto.ComponentListItem
 import me.gimmesomepeace.studyhub.subject.component.dto.ComponentType
-import me.gimmesomepeace.studyhub.subject.component.exception.ComponentExceptionHandler
 import me.gimmesomepeace.studyhub.subject.component.exception.ComponentNotFoundException
 import me.gimmesomepeace.studyhub.subject.component.fixtures.componentCreateRequest
 import me.gimmesomepeace.studyhub.subject.component.fixtures.componentDetails
@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.post
 import tools.jackson.databind.ObjectMapper
 
 @WebMvcTest(ComponentController::class)
-@Import(SubjectExceptionHandler::class, ComponentExceptionHandler::class)
+@Import(SubjectExceptionHandler::class, TestSecurityConfig::class)
 class ComponentControllerTest {
     @Autowired
     private lateinit var mvc: MockMvc
@@ -346,8 +346,9 @@ class ComponentControllerTest {
             every { service.delete(subjectId, componentId, userId) } throws SubjectNotFoundException(subjectId)
 
             mvc
-                .delete("/subjects/{subjectId}/components/{id}", subjectId, componentId)
-                .andExpect {
+                .delete("/subjects/{subjectId}/components/{id}", subjectId, componentId) {
+                    with(authenticateAs(userId))
+                }.andExpect {
                     status { isNotFound() }
                     jsonPath("$.code") { value("SUBJECT_NOT_FOUND") }
                 }

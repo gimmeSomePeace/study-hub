@@ -79,15 +79,15 @@ class DeadlineService(
         userId: UUID,
     ): DeadlineDetails {
         val deadline = deadlineRepository
-            .findById(id)
-            .orElseThrow { DeadlineNotFoundException(id) }
+            .findByIdAndOwnerId(id, userId)
+            ?: throw DeadlineNotFoundException(id)
 
         if (request.subjectId != null) {
             ensureSubjectExistsAndBelongsToOwner(userId, request.subjectId)
             deadline.subjectId = request.subjectId
         }
         if (request.componentId != null) {
-            ensureComponentExistsAndBelongsToSubject(userId, request.componentId)
+            ensureComponentExistsAndBelongsToSubject(request.componentId, deadline.subjectId)
             deadline.componentId = request.componentId
         }
 

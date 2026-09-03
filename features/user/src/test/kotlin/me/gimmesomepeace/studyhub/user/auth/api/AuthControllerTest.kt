@@ -52,7 +52,7 @@ class AuthControllerTest {
                 }.andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
-                    jsonPath("$.accessToken") { value(expectedToken) }
+                    jsonPath("$.accessToken") { value(expectedToken.value) }
                 }
         }
 

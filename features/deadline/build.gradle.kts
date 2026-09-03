@@ -28,6 +28,9 @@ dependencies {
     testImplementation(libs.spring.mockk)
     testImplementation(libs.mockk)
 
+    testImplementation(libs.spring.security.test)
+    testImplementation(libs.spring.security.config)
+
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
