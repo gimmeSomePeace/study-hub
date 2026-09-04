@@ -1,11 +1,24 @@
 package me.gimmesomepeace.studyhub.deadline.fixtures
 
+import me.gimmesomepeace.studyhub.deadline.dto.DeadlineAction
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineDetails
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineListItem
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineStatus
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineType
 import java.time.Instant
 import java.util.UUID
+
+fun deadlineAction(
+    name: String = "OPEN",
+    method: String = "POST",
+    href: String = "/api/v1/deadlines/{id}/reopen",
+    description: String = "Открыть",
+) = DeadlineAction(
+    name = name,
+    method = method,
+    href = href,
+    description = description,
+)
 
 fun deadlineDetails(
     id: UUID = deadlineId(),
@@ -18,6 +31,7 @@ fun deadlineDetails(
     notes: String? = "Default notes",
     createdAt: Instant = Instant.parse("2026-01-01T00:00:00Z"),
     updatedAt: Instant = Instant.parse("2026-01-01T00:00:00Z"),
+    actions: List<DeadlineAction> = listOf(deadlineAction()),
 ) = DeadlineDetails(
     id = id,
     subjectId = subjectId,
@@ -29,6 +43,7 @@ fun deadlineDetails(
     notes = notes,
     createdAt = createdAt,
     updatedAt = updatedAt,
+    actions = actions,
 )
 
 fun deadlineListItem(

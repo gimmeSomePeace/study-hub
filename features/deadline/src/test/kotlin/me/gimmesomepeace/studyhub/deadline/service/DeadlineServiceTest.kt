@@ -8,6 +8,7 @@ import io.mockk.just
 import io.mockk.verify
 import me.gimmesomepeace.studyhub.core.id.IdGenerator
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineStatus
+import me.gimmesomepeace.studyhub.deadline.dto.DeadlineStatus.OPEN
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineType
 import me.gimmesomepeace.studyhub.deadline.entity.DeadlineEntity
 import me.gimmesomepeace.studyhub.deadline.exception.DeadlineNotFoundException
@@ -51,7 +52,7 @@ class DeadlineServiceTest {
     @MockK
     private lateinit var componentRepository: ComponentRepository
 
-    @MockK
+    @MockK(relaxed = true)
     private lateinit var statusTransitions: DeadlineStatusTransitions
 
     private lateinit var service: DeadlineService
@@ -81,7 +82,7 @@ class DeadlineServiceTest {
                 subjectId = subjectId,
                 title = "Лабораторная работа 1",
                 type = DeadlineType.LAB,
-                status = DeadlineStatus.OPEN,
+                status = OPEN,
             )
 
             every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
@@ -238,7 +239,7 @@ class DeadlineServiceTest {
                 title = "Лабораторная работа 1",
                 dueAt = pastDueAt(),
                 type = DeadlineType.LAB,
-                status = DeadlineStatus.OPEN,
+                status = OPEN,
                 notes = "some info",
             )
 
@@ -338,18 +339,18 @@ class DeadlineServiceTest {
         fun `should close deadline when status is OPEN`() {
             val entity = deadlineEntity(
                 id = deadlineId,
-                status = DeadlineStatus.OPEN,
+                status = OPEN,
             )
 
             every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
-            every { statusTransitions.canTransitTo(DeadlineStatus.OPEN, DeadlineStatus.CLOSED) } returns true
+            every { statusTransitions.canTransitTo(OPEN, DeadlineStatus.CLOSED) } returns true
             every { deadlineRepository.save(any()) } answers { firstArg() }
 
             val result = service.closeDeadline(deadlineId, userId)
 
             assertThat(result.status).isEqualTo(DeadlineStatus.CLOSED)
 
-            verify { statusTransitions.canTransitTo(DeadlineStatus.OPEN, DeadlineStatus.CLOSED) }
+            verify { statusTransitions.canTransitTo(OPEN, DeadlineStatus.CLOSED) }
             verify { deadlineRepository.save(any()) }
         }
 
@@ -409,14 +410,14 @@ class DeadlineServiceTest {
             )
 
             every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
-            every { statusTransitions.canTransitTo(DeadlineStatus.CLOSED, DeadlineStatus.OPEN) } returns true
+            every { statusTransitions.canTransitTo(DeadlineStatus.CLOSED, OPEN) } returns true
             every { deadlineRepository.save(any()) } answers { firstArg() }
 
             val result = service.reopenDeadline(deadlineId, userId)
 
-            assertThat(result.status).isEqualTo(DeadlineStatus.OPEN)
+            assertThat(result.status).isEqualTo(OPEN)
 
-            verify { statusTransitions.canTransitTo(DeadlineStatus.CLOSED, DeadlineStatus.OPEN) }
+            verify { statusTransitions.canTransitTo(DeadlineStatus.CLOSED, OPEN) }
             verify { deadlineRepository.save(any()) }
         }
 
@@ -424,14 +425,14 @@ class DeadlineServiceTest {
         fun `should return same deadline when already OPEN (idempotent)`() {
             val entity = deadlineEntity(
                 id = deadlineId,
-                status = DeadlineStatus.OPEN,
+                status = OPEN,
             )
 
             every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
 
             val result = service.reopenDeadline(deadlineId, userId)
 
-            assertThat(result.status).isEqualTo(DeadlineStatus.OPEN)
+            assertThat(result.status).isEqualTo(OPEN)
 
             verify(exactly = 0) { deadlineRepository.save(any()) }
         }
@@ -444,7 +445,7 @@ class DeadlineServiceTest {
             )
 
             every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
-            every { statusTransitions.canTransitTo(DeadlineStatus.CANCELLED, DeadlineStatus.OPEN) } returns false
+            every { statusTransitions.canTransitTo(DeadlineStatus.CANCELLED, OPEN) } returns false
 
             assertThatThrownBy { service.reopenDeadline(deadlineId, userId) }
                 .isInstanceOf(InvalidStatusTransitionException::class.java)
@@ -461,18 +462,18 @@ class DeadlineServiceTest {
         fun `should cancel deadline when status is OPEN`() {
             val entity = deadlineEntity(
                 id = deadlineId,
-                status = DeadlineStatus.OPEN,
+                status = OPEN,
             )
 
             every { deadlineRepository.findByIdAndOwnerId(deadlineId, userId) } returns entity
-            every { statusTransitions.canTransitTo(DeadlineStatus.OPEN, DeadlineStatus.CANCELLED) } returns true
+            every { statusTransitions.canTransitTo(OPEN, DeadlineStatus.CANCELLED) } returns true
             every { deadlineRepository.save(any()) } answers { firstArg() }
 
             val result = service.cancelDeadline(deadlineId, userId)
 
             assertThat(result.status).isEqualTo(DeadlineStatus.CANCELLED)
 
-            verify { statusTransitions.canTransitTo(DeadlineStatus.OPEN, DeadlineStatus.CANCELLED) }
+            verify { statusTransitions.canTransitTo(OPEN, DeadlineStatus.CANCELLED) }
             verify { deadlineRepository.save(any()) }
         }
 

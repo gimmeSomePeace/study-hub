@@ -14,4 +14,5 @@ data class DeadlineDetails(
     val notes: String?,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val actions: List<DeadlineAction>,
 )

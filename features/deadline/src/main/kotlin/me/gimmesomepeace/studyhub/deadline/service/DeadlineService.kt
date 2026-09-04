@@ -10,6 +10,7 @@ import me.gimmesomepeace.studyhub.deadline.entity.DeadlineEntity
 import me.gimmesomepeace.studyhub.deadline.exception.DeadlineNotFoundException
 import me.gimmesomepeace.studyhub.deadline.exception.InvalidStatusTransitionException
 import me.gimmesomepeace.studyhub.deadline.repository.DeadlineRepository
+import me.gimmesomepeace.studyhub.deadline.toActionAsTargetStatus
 import me.gimmesomepeace.studyhub.deadline.toDetails
 import me.gimmesomepeace.studyhub.deadline.toListItem
 import me.gimmesomepeace.studyhub.subject.component.exception.ComponentNotFoundException
@@ -36,10 +37,13 @@ class DeadlineService(
     fun getById(
         id: UUID,
         userId: UUID,
-    ): DeadlineDetails = deadlineRepository
-        .findByIdAndOwnerId(id, userId)
-        ?.toDetails()
-        ?: throw DeadlineNotFoundException(id)
+    ): DeadlineDetails {
+        val deadline = deadlineRepository
+            .findByIdAndOwnerId(id, userId)
+            ?: throw DeadlineNotFoundException(id)
+
+        return deadline.toDetailsWithActions()
+    }
 
     @Transactional(readOnly = true)
     fun list(
@@ -70,7 +74,8 @@ class DeadlineService(
         )
 
         deadlineRepository.save(deadline)
-        return deadline.toDetails()
+
+        return deadline.toDetailsWithActions()
     }
 
     fun update(
@@ -97,9 +102,9 @@ class DeadlineService(
         if (request.notes != null) deadline.notes = request.notes
 
         deadline.updatedAt = Instant.now()
-
         deadlineRepository.save(deadline)
-        return deadline.toDetails()
+
+        return deadline.toDetailsWithActions()
     }
 
     fun closeDeadline(
@@ -126,14 +131,22 @@ class DeadlineService(
             .findByIdAndOwnerId(id, userId)
             ?: throw DeadlineNotFoundException(id)
 
-        if (deadline.status == newStatus) return deadline.toDetails()
+        if (deadline.status == newStatus) return deadline.toDetailsWithActions()
 
         if (!statusTransitions.canTransitTo(deadline.status, newStatus)) {
             throw InvalidStatusTransitionException(deadline.status, newStatus)
         }
         deadline.status = newStatus
         deadline.updatedAt = Instant.now()
-        return deadlineRepository.save(deadline).toDetails()
+
+        return deadlineRepository.save(deadline).toDetailsWithActions()
+    }
+
+    private fun DeadlineEntity.toDetailsWithActions(): DeadlineDetails {
+        val actions = statusTransitions
+            .availableTransitionsFor(status)
+            .map { it.toActionAsTargetStatus(id) }
+        return this.toDetails(actions)
     }
 
     fun delete(

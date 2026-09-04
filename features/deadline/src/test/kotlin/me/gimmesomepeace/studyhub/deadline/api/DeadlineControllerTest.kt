@@ -88,6 +88,7 @@ class DeadlineControllerTest {
                     jsonPath("$.dueAt") { exists() }
                     jsonPath("$.createdAt") { exists() }
                     jsonPath("$.updatedAt") { exists() }
+                    jsonPath("$.actions") { isArray() }
                 }
         }
 
@@ -185,6 +186,7 @@ class DeadlineControllerTest {
                     jsonPath("$.title") { value(request.title) }
                     jsonPath("$.type") { value(request.type.name) }
                     jsonPath("$.status") { exists() }
+                    jsonPath("$.actions") { exists() }
                 }
 
             verify { service.create(request, userId) }
