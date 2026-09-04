@@ -9,6 +9,7 @@ uuid-creator = "6.1.1"
 springdoc-openapi = "3.1.0"
 flyway = "13.4.0"
 postgresql = "42.7.13"
+swagger = "2.2.54"
 
 [libraries]
 # version management
@@ -47,6 +48,7 @@ postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" 
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
 jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
 uuid-creator = { module = "com.github.f4b6a3:uuid-creator", version.ref = "uuid-creator" }
+swagger-annotations-jakarta = { module = "io.swagger.core.v3:swagger-annotations-jakarta", version.ref = "swagger" }
 
 # JUnit
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }

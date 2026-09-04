@@ -12,6 +12,9 @@ repositories {
 dependencies {
     implementation(project(":features:core"))
     implementation(project(":features:user"))
+    implementation(project(":features:semester"))
+    implementation(project(":features:subject"))
+    implementation(project(":features:deadline"))
     implementation(project(":infrastructure"))
 
     implementation(platform(libs.spring.boot.dependencies))

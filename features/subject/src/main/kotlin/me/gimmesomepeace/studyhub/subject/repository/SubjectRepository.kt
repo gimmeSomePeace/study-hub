@@ -12,8 +12,8 @@ interface SubjectRepository : JpaRepository<SubjectEntity, UUID> {
     @Query(
         """
         SELECT s FROM SubjectEntity s
-        JOIN  SemesterEntity sem ON s.semester_id = sem.id
-        WHERE s.id = :id AND sem.owner_id = :ownerId
+        JOIN  SemesterEntity sem ON s.semesterId = sem.id
+        WHERE s.id = :id AND sem.ownerId = :ownerId
     """,
     )
     fun findByIdAndOwnerId(
@@ -24,8 +24,8 @@ interface SubjectRepository : JpaRepository<SubjectEntity, UUID> {
     @Query(
         """
         SELECT s FROM SubjectEntity s
-        JOIN  SemesterEntity sem ON s.semester_id = sem.id
-        WHERE sem.owner_id = :ownerId
+        JOIN  SemesterEntity sem ON s.semesterId = sem.id
+        WHERE sem.ownerId = :ownerId
     """,
     )
     fun findByOwnerId(
@@ -36,7 +36,7 @@ interface SubjectRepository : JpaRepository<SubjectEntity, UUID> {
     @Query(
         """
             DELETE FROM SubjectEntity s
-            WHERE s.id = :id AND s.owner_id IN (SELECT id FROM SemesterEntity sem WHERE sem.owner_id = :ownerId)
+            WHERE s.id = :id AND s.semesterId IN (SELECT id FROM SemesterEntity sem WHERE sem.ownerId = :ownerId)
         """,
     )
     fun deleteByIdAndOwnerId(
@@ -48,8 +48,8 @@ interface SubjectRepository : JpaRepository<SubjectEntity, UUID> {
         """
         SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END
         FROM SubjectEntity s
-        JOIN SemesterEntity sem ON s.semester_id = sem.id
-        WHERE s.id = :id AND sem.owner_id = :ownerId
+        JOIN SemesterEntity sem ON s.semesterId = sem.id
+        WHERE s.id = :id AND sem.ownerId = :ownerId
     """,
     )
     fun existsByIdAndOwnerId(

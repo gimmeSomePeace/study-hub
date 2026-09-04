@@ -24,8 +24,8 @@ CREATE TABLE semesters (
     id         UUID         PRIMARY KEY,
     owner_id   UUID         NOT NULL,
     name       VARCHAR(80)  NOT NULL,
-    starts_at  TIMESTAMPTZ  NOT NULL,
-    ends_at    TIMESTAMPTZ  NOT NULL,
+    starts_at  DATE         NOT NULL,
+    ends_at    DATE         NOT NULL,
     created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
 

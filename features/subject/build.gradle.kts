@@ -25,6 +25,8 @@ dependencies {
     implementation(libs.jakarta.persistence.api)
     implementation(libs.jackson.module.kotlin)
 
+    implementation(libs.swagger.annotations.jakarta)
+
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.spring.boot.starter.webmvc.test)
     testImplementation(libs.spring.mockk)

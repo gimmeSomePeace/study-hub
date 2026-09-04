@@ -25,10 +25,17 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers("/auth/register", "/auth/login")
-                    .permitAll()
-                    .requestMatchers("/actuator/health")
-                    .permitAll()
+                    .requestMatchers(
+                        "/auth/register",
+                        "/auth/login",
+                    ).permitAll()
+                    .requestMatchers(
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
+                        "/webjars/**",
+                    ).permitAll()
                     .anyRequest()
                     .authenticated()
             }.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

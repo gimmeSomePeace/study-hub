@@ -46,7 +46,7 @@ class AuthControllerTest {
             every { authService.login(request) } returns expectedToken
 
             mvc
-                .post("/auth/login") {
+                .post("/api/v1/auth/login") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                 }.andExpect {
@@ -63,7 +63,7 @@ class AuthControllerTest {
             every { authService.login(request) } throws InvalidCredentialsException()
 
             mvc
-                .post("/auth/login") {
+                .post("/api/v1/auth/login") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                 }.andExpect {
@@ -80,7 +80,7 @@ class AuthControllerTest {
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
-                .post("/auth/login") {
+                .post("/api/v1/auth/login") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(requestBody)
                 }.andExpect {
@@ -107,7 +107,7 @@ class AuthControllerTest {
             every { authService.register(request) } returns created
 
             mvc
-                .post("/auth/register") {
+                .post("/api/v1/auth/register") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                 }.andExpect {
@@ -128,7 +128,7 @@ class AuthControllerTest {
             every { authService.register(request) } throws LoginAlreadyExistsException(login)
 
             mvc
-                .post("/auth/register") {
+                .post("/api/v1/auth/register") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(request)
                 }.andExpect {
@@ -143,7 +143,7 @@ class AuthControllerTest {
         )
         fun `should return 400 when request is invalid`(requestBody: Map<String, Any?>) {
             mvc
-                .post("/auth/register") {
+                .post("/api/v1/auth/register") {
                     contentType = MediaType.APPLICATION_JSON
                     content = objectMapper.writeValueAsString(requestBody)
                 }.andExpect {

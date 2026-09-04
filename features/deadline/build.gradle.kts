@@ -22,6 +22,7 @@ dependencies {
     implementation(libs.jackson.module.kotlin)
 
     implementation(libs.spring.security.core)
+    implementation(libs.swagger.annotations.jakarta)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.spring.boot.starter.webmvc.test)
