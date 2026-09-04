@@ -4,13 +4,12 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
-import me.gimmesomepeace.studyhub.common.id.IdGenerator
-import me.gimmesomepeace.studyhub.common.token.TokenProvider
-import me.gimmesomepeace.studyhub.common.user.UserRole
+import me.gimmesomepeace.studyhub.core.id.IdGenerator
+import me.gimmesomepeace.studyhub.core.token.TokenProvider
+import me.gimmesomepeace.studyhub.core.user.UserRole
 import me.gimmesomepeace.studyhub.user.auth.exception.InvalidCredentialsException
 import me.gimmesomepeace.studyhub.user.auth.fixtures.loginRequest
 import me.gimmesomepeace.studyhub.user.auth.fixtures.registerRequest
-import me.gimmesomepeace.studyhub.user.entity.UserEntity
 import me.gimmesomepeace.studyhub.user.exception.LoginAlreadyExistsException
 import me.gimmesomepeace.studyhub.user.fixtures.login
 import me.gimmesomepeace.studyhub.user.fixtures.password

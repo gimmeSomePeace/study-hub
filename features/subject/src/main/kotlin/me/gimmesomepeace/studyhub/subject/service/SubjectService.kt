@@ -1,6 +1,6 @@
 package me.gimmesomepeace.studyhub.subject.service
 
-import me.gimmesomepeace.studyhub.common.id.IdGenerator
+import me.gimmesomepeace.studyhub.core.id.IdGenerator
 import me.gimmesomepeace.studyhub.semester.repository.SemesterRepository
 import me.gimmesomepeace.studyhub.subject.api.create.SubjectCreateRequest
 import me.gimmesomepeace.studyhub.subject.api.update.SubjectUpdateRequest

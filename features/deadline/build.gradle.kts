@@ -9,7 +9,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":features:common"))
+    implementation(project(":features:core"))
     implementation(project(":features:subject"))
 
     implementation(platform(libs.spring.boot.dependencies))

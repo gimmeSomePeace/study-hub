@@ -1,6 +1,6 @@
 package me.gimmesomepeace.studyhub.app.id
 
-import me.gimmesomepeace.studyhub.common.id.IdGenerator
+import me.gimmesomepeace.studyhub.core.id.IdGenerator
 import me.gimmmesomepeace.studyhub.infrastructure.id.UuidV7Generator
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

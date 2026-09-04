@@ -11,8 +11,8 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":features:common"))
 
+    implementation(project(":features:core"))
     implementation(platform(libs.spring.boot.dependencies))
     implementation(libs.spring.security.web)
     implementation(libs.spring.security.crypto)

@@ -1,9 +1,9 @@
 package me.gimmesomepeace.studyhub.user.auth.service
 
 import jakarta.validation.ValidationException
-import me.gimmesomepeace.studyhub.common.id.IdGenerator
-import me.gimmesomepeace.studyhub.common.token.AccessToken
-import me.gimmesomepeace.studyhub.common.token.TokenProvider
+import me.gimmesomepeace.studyhub.core.id.IdGenerator
+import me.gimmesomepeace.studyhub.core.token.AccessToken
+import me.gimmesomepeace.studyhub.core.token.TokenProvider
 import me.gimmesomepeace.studyhub.user.auth.api.login.LoginRequest
 import me.gimmesomepeace.studyhub.user.auth.api.reg.RegisterRequest
 import me.gimmesomepeace.studyhub.user.auth.exception.InvalidCredentialsException

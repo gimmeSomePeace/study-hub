@@ -1,4 +1,4 @@
-package me.gimmesomepeace.studyhub.common.user
+package me.gimmesomepeace.studyhub.core.user
 
 import java.util.UUID
 

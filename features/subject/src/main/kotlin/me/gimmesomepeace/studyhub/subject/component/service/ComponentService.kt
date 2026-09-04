@@ -1,6 +1,6 @@
 package me.gimmesomepeace.studyhub.subject.component.service
 
-import me.gimmesomepeace.studyhub.common.id.IdGenerator
+import me.gimmesomepeace.studyhub.core.id.IdGenerator
 import me.gimmesomepeace.studyhub.subject.component.api.create.ComponentCreateRequest
 import me.gimmesomepeace.studyhub.subject.component.api.update.ComponentUpdateRequest
 import me.gimmesomepeace.studyhub.subject.component.dto.ComponentDetails

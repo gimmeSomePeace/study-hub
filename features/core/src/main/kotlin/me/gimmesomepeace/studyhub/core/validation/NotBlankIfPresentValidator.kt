@@ -1,4 +1,4 @@
-package me.gimmesomepeace.studyhub.common.validation
+package me.gimmesomepeace.studyhub.core.validation
 
 import jakarta.validation.ConstraintValidator
 import jakarta.validation.ConstraintValidatorContext

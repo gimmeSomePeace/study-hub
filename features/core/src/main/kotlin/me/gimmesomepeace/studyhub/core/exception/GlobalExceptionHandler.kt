@@ -1,4 +1,4 @@
-package me.gimmesomepeace.studyhub.common.exception
+package me.gimmesomepeace.studyhub.core.exception
 
 import jakarta.validation.ValidationException
 import org.springframework.http.HttpStatus

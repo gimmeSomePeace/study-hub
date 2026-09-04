@@ -6,7 +6,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.verify
-import me.gimmesomepeace.studyhub.common.id.IdGenerator
+import me.gimmesomepeace.studyhub.core.id.IdGenerator
 import me.gimmesomepeace.studyhub.semester.exception.SemesterNotFoundException
 import me.gimmesomepeace.studyhub.semester.exception.SemesterValidationException
 import me.gimmesomepeace.studyhub.semester.fixtures.pageable

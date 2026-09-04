@@ -1,6 +1,6 @@
 package me.gimmesomepeace.studyhub.user
 
-import me.gimmesomepeace.studyhub.common.user.UserRole
+import me.gimmesomepeace.studyhub.core.user.UserRole
 
 object UserConstraints {
     const val MAX_LOGIN_LENGTH = 100

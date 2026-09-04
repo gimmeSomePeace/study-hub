@@ -2,10 +2,10 @@ package me.gimmmesomepeace.studyhub.infrastructure.token
 
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
-import me.gimmesomepeace.studyhub.common.token.AccessToken
-import me.gimmesomepeace.studyhub.common.token.ParsedToken
-import me.gimmesomepeace.studyhub.common.token.TokenProvider
-import me.gimmesomepeace.studyhub.common.user.UserRole
+import me.gimmesomepeace.studyhub.core.token.AccessToken
+import me.gimmesomepeace.studyhub.core.token.ParsedToken
+import me.gimmesomepeace.studyhub.core.token.TokenProvider
+import me.gimmesomepeace.studyhub.core.user.UserRole
 import java.util.Date
 import java.util.UUID
 import javax.crypto.SecretKey

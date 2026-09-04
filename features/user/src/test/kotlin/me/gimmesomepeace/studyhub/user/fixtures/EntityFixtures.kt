@@ -1,7 +1,7 @@
 package me.gimmesomepeace.studyhub.user.fixtures
 
-import me.gimmesomepeace.studyhub.common.token.AccessToken
-import me.gimmesomepeace.studyhub.common.user.UserRole
+import me.gimmesomepeace.studyhub.core.token.AccessToken
+import me.gimmesomepeace.studyhub.core.user.UserRole
 import me.gimmesomepeace.studyhub.user.entity.UserEntity
 import java.time.Instant
 import java.util.UUID

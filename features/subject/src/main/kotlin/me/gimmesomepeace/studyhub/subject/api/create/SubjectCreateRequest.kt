@@ -3,7 +3,7 @@ package me.gimmesomepeace.studyhub.subject.api.create
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
-import me.gimmesomepeace.studyhub.common.validation.NotBlankIfPresent
+import me.gimmesomepeace.studyhub.core.validation.NotBlankIfPresent
 import me.gimmesomepeace.studyhub.subject.constraint.SubjectConstraints
 import java.util.UUID
 

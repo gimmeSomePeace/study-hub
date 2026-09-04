@@ -12,8 +12,8 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":features:common"))
 
+    implementation(project(":features:core"))
     implementation(platform(libs.spring.boot.dependencies))
 
     implementation(libs.spring.web)

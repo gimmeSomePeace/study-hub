@@ -1,4 +1,4 @@
-package me.gimmesomepeace.studyhub.common.exception
+package me.gimmesomepeace.studyhub.core.exception
 
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.FieldError

@@ -1,7 +1,7 @@
 package me.gimmesomepeace.studyhub.deadline.api
 
 import jakarta.validation.Valid
-import me.gimmesomepeace.studyhub.common.user.UserPrincipal
+import me.gimmesomepeace.studyhub.core.user.UserPrincipal
 import me.gimmesomepeace.studyhub.deadline.api.create.DeadlineCreateRequest
 import me.gimmesomepeace.studyhub.deadline.api.update.DeadlineUpdateRequest
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineDetails

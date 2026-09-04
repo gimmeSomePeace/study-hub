@@ -1,7 +1,7 @@
 package me.gimmesomepeace.studyhub.deadline.api.update
 
 import jakarta.validation.constraints.Size
-import me.gimmesomepeace.studyhub.common.validation.NotBlankIfPresent
+import me.gimmesomepeace.studyhub.core.validation.NotBlankIfPresent
 import me.gimmesomepeace.studyhub.deadline.DeadlineConstraints
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineType
 import java.time.Instant

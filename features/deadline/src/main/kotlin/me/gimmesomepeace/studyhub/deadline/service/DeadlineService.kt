@@ -1,6 +1,6 @@
 package me.gimmesomepeace.studyhub.deadline.service
 
-import me.gimmesomepeace.studyhub.common.id.IdGenerator
+import me.gimmesomepeace.studyhub.core.id.IdGenerator
 import me.gimmesomepeace.studyhub.deadline.api.create.DeadlineCreateRequest
 import me.gimmesomepeace.studyhub.deadline.api.update.DeadlineUpdateRequest
 import me.gimmesomepeace.studyhub.deadline.dto.DeadlineDetails

@@ -1,4 +1,4 @@
-package me.gimmesomepeace.studyhub.common.token
+package me.gimmesomepeace.studyhub.core.token
 
 @JvmInline
 value class AccessToken(

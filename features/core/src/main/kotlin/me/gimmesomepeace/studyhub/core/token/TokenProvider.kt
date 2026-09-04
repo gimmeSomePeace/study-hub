@@ -1,6 +1,6 @@
-package me.gimmesomepeace.studyhub.common.token
+package me.gimmesomepeace.studyhub.core.token
 
-import me.gimmesomepeace.studyhub.common.user.UserRole
+import me.gimmesomepeace.studyhub.core.user.UserRole
 import java.util.UUID
 
 interface TokenProvider {

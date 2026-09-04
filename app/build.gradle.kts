@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":features:common"))
+    implementation(project(":features:core"))
     implementation(project(":features:user"))
     implementation(project(":infrastructure"))
 
@@ -22,6 +22,12 @@ dependencies {
     implementation(libs.springdoc.openapi.starter.webmvc)
 
     implementation(libs.jjwt.api)
+    implementation(libs.spring.boot.starter.flyway)
+
+    runtimeOnly(libs.flyway.core)
+    runtimeOnly(libs.flyway.database.postgresql)
+    runtimeOnly(libs.postgresql)
+    runtimeOnly(libs.jjwt.impl)
 
     testImplementation(libs.spring.boot.starter.test)
 }

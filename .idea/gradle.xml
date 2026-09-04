@@ -23,7 +23,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/build-logic" />
             <option value="$PROJECT_DIR$/features" />
-            <option value="$PROJECT_DIR$/features/common" />
+            <option value="$PROJECT_DIR$/features/core" />
             <option value="$PROJECT_DIR$/features/deadline" />
             <option value="$PROJECT_DIR$/features/semester" />
             <option value="$PROJECT_DIR$/features/subject" />

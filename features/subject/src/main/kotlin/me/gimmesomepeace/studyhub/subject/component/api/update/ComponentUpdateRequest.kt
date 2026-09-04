@@ -3,7 +3,7 @@ package me.gimmesomepeace.studyhub.subject.component.api.update
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
-import me.gimmesomepeace.studyhub.common.validation.NotBlankIfPresent
+import me.gimmesomepeace.studyhub.core.validation.NotBlankIfPresent
 import me.gimmesomepeace.studyhub.subject.component.constraint.ComponentConstraints
 import me.gimmesomepeace.studyhub.subject.component.dto.ComponentType
 

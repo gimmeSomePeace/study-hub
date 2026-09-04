@@ -1,7 +1,7 @@
 package me.gimmesomepeace.studyhub.semester.api
 
 import jakarta.validation.Valid
-import me.gimmesomepeace.studyhub.common.user.UserPrincipal
+import me.gimmesomepeace.studyhub.core.user.UserPrincipal
 import me.gimmesomepeace.studyhub.semester.api.create.SemesterCreateRequest
 import me.gimmesomepeace.studyhub.semester.api.update.SemesterUpdateRequest
 import me.gimmesomepeace.studyhub.semester.dto.SemesterDetails

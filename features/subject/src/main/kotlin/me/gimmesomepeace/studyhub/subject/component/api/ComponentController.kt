@@ -1,7 +1,7 @@
 package me.gimmesomepeace.studyhub.subject.component.api
 
 import jakarta.validation.Valid
-import me.gimmesomepeace.studyhub.common.user.UserPrincipal
+import me.gimmesomepeace.studyhub.core.user.UserPrincipal
 import me.gimmesomepeace.studyhub.subject.component.api.create.ComponentCreateRequest
 import me.gimmesomepeace.studyhub.subject.component.api.update.ComponentUpdateRequest
 import me.gimmesomepeace.studyhub.subject.component.dto.ComponentDetails

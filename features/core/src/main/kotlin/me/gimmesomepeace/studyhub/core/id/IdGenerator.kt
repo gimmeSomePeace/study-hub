@@ -1,4 +1,4 @@
-package me.gimmesomepeace.studyhub.common.id
+package me.gimmesomepeace.studyhub.core.id
 
 fun interface IdGenerator<T> {
     fun generate(): T

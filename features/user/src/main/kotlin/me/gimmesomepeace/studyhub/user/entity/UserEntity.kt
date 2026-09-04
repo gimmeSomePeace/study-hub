@@ -6,8 +6,8 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import me.gimmesomepeace.studyhub.core.user.UserRole
 import me.gimmesomepeace.studyhub.user.UserConstraints
-import me.gimmesomepeace.studyhub.common.user.UserRole
 import java.time.Instant
 import java.util.UUID
 
